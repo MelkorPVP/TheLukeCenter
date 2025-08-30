@@ -36,6 +36,7 @@
   height:44px;
   width:auto;
 }
+.contentSection{display:none}
 .navbar-nav .nav-link{
   color:var(--brand-700);
   border-radius:.5rem;
