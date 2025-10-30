@@ -1,0 +1,4 @@
+/vendor/
+/credentials.json
+/.env
+.DS_Store
