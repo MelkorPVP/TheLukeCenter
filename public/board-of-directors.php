@@ -14,7 +14,7 @@ $executiveSecretary = site_content_role($config, 'executive_secretary');
 $pageTitle = 'Board of Directors – The Luke Center';
 $activeNav = 'board';
 
-require __DIR__ . '/includes/layout/header.php';
+require __DIR__ . '/templates/header.php';
 ?>
     <section class="hero text-center text-hero border-bottom">
       <div class="container py-5">
@@ -71,5 +71,5 @@ require __DIR__ . '/includes/layout/header.php';
         </div>
       </div>
     </section>
-<?php require __DIR__ . '/includes/layout/footer.php';
+<?php require __DIR__ . '/templates/footer.php';
 ?>

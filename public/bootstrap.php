@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/includes/content.php';
-require_once __DIR__ . '/includes/forms.php';
+require_once __DIR__ . '/src/content.php';
+require_once __DIR__ . '/src/forms.php';
 
 try {
     $config = require __DIR__ . '/config/app.php';
@@ -18,4 +18,5 @@ try {
 
 return [
     'config' => $config,
+    'templates_path' => __DIR__ . '/templates',
 ];

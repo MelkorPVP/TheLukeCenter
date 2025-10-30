@@ -9,7 +9,8 @@ public/
   ├── api/                 # JSON endpoints for application and contact forms
   ├── assets/              # Static CSS and JavaScript
   ├── config/              # Application configuration and service-account JSON placeholder
-  ├── includes/            # Reusable PHP helpers and layout partials
+  ├── src/                 # Reusable PHP helpers for Google APIs and forms
+  ├── templates/           # Shared header/footer partials
   ├── *.php                # Public pages for the site
 ```
 
