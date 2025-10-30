@@ -1,0 +1,11 @@
+{
+    "name": "thelukecenter/site",
+    "require": {
+        "google/apiclient": "^2.15"
+    },
+    "autoload": {
+        "psr-4": {
+            "TheLukeCenter\\": "src/"
+        }
+    }
+}
