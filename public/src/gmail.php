@@ -2,21 +2,29 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/google_auth.php';
+require_once __DIR__ . '/google_http.php';
 
 /**
  * @param array<string, mixed> $config
  */
 function gmail_send_message(array $config, string $from, array $to, string $subject, string $body): void
 {
-    if ($from === '' || empty($to)) {
-        throw new RuntimeException('Email configuration is incomplete.');
+    $apiKey = trim((string) ($config['api_key'] ?? ''));
+    if ($apiKey === '') {
+        throw new RuntimeException('Google API key is not configured.');
     }
 
-    $token = google_service_account_token($config, ['https://www.googleapis.com/auth/gmail.send']);
+    $sender = trim($from);
+    if ($sender === '') {
+        throw new RuntimeException('Gmail sender address is not configured.');
+    }
+
+    if (empty($to)) {
+        throw new RuntimeException('Email recipient list is empty.');
+    }
 
     $headers = [
-        'From' => $from,
+        'From' => $sender,
         'To' => implode(', ', $to),
         'Subject' => $subject,
         'Content-Type' => 'text/plain; charset=utf-8',
@@ -30,12 +38,12 @@ function gmail_send_message(array $config, string $from, array $to, string $subj
 
     $raw = rtrim(strtr(base64_encode($message), '+/', '-_'), '=');
 
-    $url = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send';
+    $url = sprintf('https://gmail.googleapis.com/gmail/v1/users/%s/messages/send', rawurlencode($sender));
 
     google_http_request(
         $url,
+        ['key' => $apiKey],
         ['raw' => $raw],
-        $token,
         'POST'
     );
 }

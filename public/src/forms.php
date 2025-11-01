@@ -19,10 +19,7 @@ function handle_contact_submission(array $config, array $payload): void
     validate_required($data, ['contactFirstName','contactEmail']);
     validate_email($data['contactEmail'], 'contactEmail');
 
-    $googleConfig = [
-        'credentials_path' => $config['google']['credentials_path'] ?? null,
-        'delegated_user' => $config['google']['delegated_user'] ?? null,
-    ];
+    $googleConfig = $config['google'] ?? [];
 
     $timestamp = (new DateTimeImmutable('now'))->format('c');
     google_sheets_append_row(
@@ -43,7 +40,7 @@ function handle_contact_submission(array $config, array $payload): void
 
     $recipients = $config['email']['recipients'] ?? [];
     if (!empty($recipients)) {
-        $from = $config['google']['delegated_user'] ?: ($recipients[0] ?? 'admin@thelukecenter.org');
+        $from = $config['google']['gmail_sender'] ?? ($recipients[0] ?? '');
         $subject = sprintf('New contact info: %s %s', $data['contactFirstName'], $data['contactLastName']);
         $body = sprintf(
             "Timestamp: %s\nFirst Name: %s\nLast Name: %s\nEmail: %s\nPhone: %s\nPhone Type: %s\nOrganization: %s\nProgram Year: %s\n",
@@ -84,10 +81,7 @@ function handle_application_submission(array $config, array $payload): void
     validate_email($data['applicantEmail'], 'applicantEmail');
     validate_email($data['supEmail'], 'supEmail');
 
-    $googleConfig = [
-        'credentials_path' => $config['google']['credentials_path'] ?? null,
-        'delegated_user' => $config['google']['delegated_user'] ?? null,
-    ];
+    $googleConfig = $config['google'] ?? [];
 
     $timestamp = (new DateTimeImmutable('now'))->format('c');
     google_sheets_append_row(
@@ -129,7 +123,7 @@ function handle_application_submission(array $config, array $payload): void
 
     $recipients = $config['email']['recipients'] ?? [];
     if (!empty($recipients)) {
-        $from = $config['google']['delegated_user'] ?: ($recipients[0] ?? 'admin@thelukecenter.org');
+        $from = $config['google']['gmail_sender'] ?? ($recipients[0] ?? '');
         $subject = sprintf('New application: %s %s', $data['applicantFirstName'], $data['applicantLastName']);
         $body = build_application_email_body($timestamp, $data);
         gmail_send_message($googleConfig, $from, $recipients, $subject, $body);
@@ -198,11 +192,11 @@ function build_application_email_body(string $timestamp, array $data): string
         'Referral: ' . $data['refferalQuestion'],
         'Leadership Responsibilities: ' . $data['questionOne'],
         'Partnership Experience: ' . $data['questionTwo'],
-        'Professional Challenge: ' . $data['questionThree'],
-        'Program Goals: ' . $data['questionFour'],
-        'Scholarship Needed: ' . $data['partialScholarship'],
-        'Requested Amount: ' . $data['assistAmount'],
+        'Community Collaboration: ' . $data['questionThree'],
+        'Desired Takeaways: ' . $data['questionFour'],
+        'Partial Scholarship: ' . $data['partialScholarship'],
+        'Assistance Amount: ' . $data['assistAmount'],
     ];
 
-    return implode("\n", $lines) . "\n";
+    return implode("\n", $lines);
 }

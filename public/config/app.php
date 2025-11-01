@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 return [
     'google' => [
-        'credentials_path' => getenv('GOOGLE_APPLICATION_CREDENTIALS') ?: __DIR__ . '/service-account.json',
-        'delegated_user' => getenv('GOOGLE_DELEGATED_USER') ?: null,
+        'api_key' => getenv('GOOGLE_API_KEY') ?: '',
+        'gmail_sender' => getenv('GOOGLE_GMAIL_SENDER') ?: '',
         'site_values_spreadsheet_id' => getenv('GOOGLE_SITE_VALUES_SHEET_ID') ?: '',
         'site_values_range' => getenv('GOOGLE_SITE_VALUES_RANGE') ?: 'Values!A:B',
         'contact_spreadsheet_id' => getenv('GOOGLE_CONTACT_SHEET_ID') ?: '',

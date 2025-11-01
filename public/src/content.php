@@ -16,10 +16,7 @@ function site_content_values(array $config): array
         return $cache;
     }
 
-    $googleConfig = [
-        'credentials_path' => $config['google']['credentials_path'] ?? null,
-        'delegated_user' => $config['google']['delegated_user'] ?? null,
-    ];
+    $googleConfig = $config['google'] ?? [];
 
     $values = google_sheets_get_values(
         $googleConfig,

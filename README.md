@@ -8,7 +8,7 @@ This repository hosts a lightweight multi-page PHP site for The Luke Center for 
 public/
   ├── api/                 # JSON endpoints for application and contact forms
   ├── assets/              # Static CSS and JavaScript
-  ├── config/              # Application configuration and service-account JSON placeholder
+  ├── config/              # Application configuration and API key placeholder
   ├── src/                 # Reusable PHP helpers for Google APIs and forms
   ├── templates/           # Shared header/footer partials
   ├── *.php                # Public pages for the site
@@ -19,22 +19,23 @@ There is no Composer dependency—every helper is loaded with simple `require` s
 ## Requirements
 
 * PHP 8.1+
-* cURL and OpenSSL extensions enabled (used for Google API calls)
-* Google Cloud service account with the Google Sheets API and Gmail API enabled
-* The service account (or delegated user) must have access to:
+* cURL extension enabled (used for Google API calls)
+* Google Cloud project with the Sheets API and Gmail API enabled
+* A browser API key that is allowed to call both APIs
+* A Gmail address that the API key is authorized to use for sending mail
+* Three Google Sheets that the API key can access:
   * A spreadsheet containing site content key/value pairs
   * A spreadsheet to store application submissions
   * A spreadsheet to store contact submissions
-  * Gmail send permissions for the delegated account (when sending notifications)
 
 ## Configuration
 
-Copy your service account JSON file into `public/config/service-account.json` (or place it elsewhere and update the path). Environment variables can override any setting:
+Set the API key, Gmail sender, and spreadsheet identifiers in `public/config/app.php` or by defining environment variables before the site boots:
 
 | Variable | Description |
 | --- | --- |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Absolute path to the service account JSON credentials. Defaults to `public/config/service-account.json`. |
-| `GOOGLE_DELEGATED_USER` | Optional email address to impersonate when sending Gmail messages. |
+| `GOOGLE_API_KEY` | API key used for Google Sheets and Gmail calls. |
+| `GOOGLE_GMAIL_SENDER` | Email address used to send notifications through Gmail. |
 | `GOOGLE_SITE_VALUES_SHEET_ID` | Spreadsheet ID that stores site content (program name, dates, directors, etc.). |
 | `GOOGLE_SITE_VALUES_RANGE` | Range within the site content sheet. Defaults to `Values!A:B`. |
 | `GOOGLE_CONTACT_SHEET_ID` | Spreadsheet ID for storing contact form submissions. |
@@ -43,7 +44,7 @@ Copy your service account JSON file into `public/config/service-account.json` (o
 | `GOOGLE_APPLICATION_SHEET_TAB` | Sheet tab for application submissions. Defaults to `Submissions`. |
 | `APP_EMAIL_RECIPIENTS` | Comma-separated list of recipients who should receive notification emails. |
 
-You can also edit `public/config/app.php` directly to hard-code these values if preferred.
+You can edit `public/config/app.php` directly to hard-code these values if preferred.
 
 ## Running locally
 
@@ -64,4 +65,4 @@ Both endpoints respond with JSON containing an `ok` flag and an optional `error`
 
 ## Deployment
 
-Deploy everything inside the `public/` directory to your PHP-capable host. Ensure the server can read the service account JSON file and that the necessary environment variables are set. No Composer installation is required.
+Deploy everything inside the `public/` directory to your PHP-capable host. Ensure the server can read the configuration file and that the necessary environment variables are set. No Composer installation is required.

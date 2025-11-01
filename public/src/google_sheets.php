@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/google_auth.php';
+require_once __DIR__ . '/google_http.php';
 
 /**
  * @param array<string, mixed> $config
@@ -14,9 +14,13 @@ function google_sheets_get_values(array $config, string $spreadsheetId, string $
         throw new RuntimeException('Google Sheets spreadsheet ID is not configured.');
     }
 
-    $token = google_service_account_token($config, ['https://www.googleapis.com/auth/spreadsheets.readonly']);
+    $apiKey = trim((string) ($config['api_key'] ?? ''));
+    if ($apiKey === '') {
+        throw new RuntimeException('Google API key is not configured.');
+    }
+
     $url = sprintf('https://sheets.googleapis.com/v4/spreadsheets/%s/values/%s', urlencode($spreadsheetId), rawurlencode($range));
-    $response = google_http_request($url, [], $token, 'GET');
+    $response = google_http_request($url, ['key' => $apiKey]);
 
     /** @var array<int, array<int, string>> $values */
     $values = $response['values'] ?? [];
@@ -33,19 +37,23 @@ function google_sheets_append_row(array $config, string $spreadsheetId, string $
         throw new RuntimeException('Google Sheets spreadsheet ID is not configured.');
     }
 
-    $token = google_service_account_token($config, ['https://www.googleapis.com/auth/spreadsheets']);
-    $url = sprintf(
-        'https://sheets.googleapis.com/v4/spreadsheets/%s/values/%s:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS',
-        urlencode($spreadsheetId),
-        rawurlencode($range)
-    );
+    $apiKey = trim((string) ($config['api_key'] ?? ''));
+    if ($apiKey === '') {
+        throw new RuntimeException('Google API key is not configured.');
+    }
+
+    $url = sprintf('https://sheets.googleapis.com/v4/spreadsheets/%s/values/%s:append', urlencode($spreadsheetId), rawurlencode($range));
 
     google_http_request(
         $url,
         [
+            'key' => $apiKey,
+            'valueInputOption' => 'USER_ENTERED',
+            'insertDataOption' => 'INSERT_ROWS',
+        ],
+        [
             'values' => [$values],
         ],
-        $token,
         'POST'
     );
 }
