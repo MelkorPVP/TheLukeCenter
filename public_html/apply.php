@@ -93,8 +93,8 @@
                             </select>                            
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label" for="zip">Zip / Postal Code *</label>
-                            <input class="form-control" type="text" id="zip" name="zip" required>
+                            <label class="form-label" for="zipCode">Zip / Postal Code *</label>
+                            <input class="form-control" type="text" id="zipCode" name="zipCode" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="vegan">Are you vegan? *</label>
@@ -121,8 +121,8 @@
                             <textarea class="form-control" id="accessibilityNeeds" name="accessibilityNeeds" rows="2"></textarea>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label" for="organiaztion">Organization / Agency *</label>
-                            <input class="form-control" type="text" id="organiaztion" name="organiaztion" required>
+                            <label class="form-label" for="organization">Organization / Agency *</label>
+                            <input class="form-control" type="text" id="organization" name="organization" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="currentTitle">Current Title / Role *</label>

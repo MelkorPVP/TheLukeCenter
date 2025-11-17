@@ -21,63 +21,44 @@ function initializeNav()
 		});
 }
 
-// --- Contact Form: clear alert on submit ---
-function initializeContactForm() 
+function initializeForm(formId, statusId)
 {
-	const contactFormElement = document.getElementById('contactForm');
-	const statusAlertElement  = document.getElementById('contactStatus');
-	
-	if (!contactFormElement || !statusAlertElement) return;
-	
-	const hideStatus = () => 
-	{
-		statusAlertElement.textContent = '';
-		statusAlertElement.classList.add('d-none');
-		statusAlertElement.classList.remove('alert-success', 'alert-danger');
-	};
-	
-	// 1) Clears when browser blocks submit due to missing required fields
-	contactFormElement.addEventListener('invalid', hideStatus, true);
-	
-	// 2) Clears as soon as the user starts fixing any field
-	contactFormElement.addEventListener('input', (e) => 
-		{
-			if (e.target.matches('input, select, textarea')) hideStatus();
-		});
-		
-		// 3) Clears on actual submit when the form is valid
-		contactFormElement.addEventListener('submit', hideStatus);
-}
+        const formElement = document.getElementById(formId);
+        const statusAlertElement = document.getElementById(statusId);
 
-// --- Contact Form: clear alert on submit ---
-function initializeApplyForm() 
-{
-	const applyFormElement = document.getElementById('applyForm');
-	const statusAlertElement  = document.getElementById('applyStatus');
-	
-	if (!applyFormElement || !statusAlertElement) return;
-	
-	const hideStatus = () => 
-	{
-		statusAlertElement.textContent = '';
-		statusAlertElement.classList.add('d-none');
-		statusAlertElement.classList.remove('alert-success', 'alert-danger');
-	};
-	
-	// 1) Clears when browser blocks submit due to missing required fields
-	applyFormElement.addEventListener('invalid', hideStatus, true);
-	
-	// 2) Clears as soon as the user starts fixing any field
-	applyFormElement.addEventListener('input', (e) => 
-		{
-			if (e.target.matches('input, select, textarea')) hideStatus();
-		});
-		
-		// 3) Clears on actual submit when the form is valid
-		applyFormElement.addEventListener('submit', hideStatus);
+        if (!formElement || !statusAlertElement) return;
+
+        const hideStatus = () =>
+        {
+                statusAlertElement.textContent = '';
+                statusAlertElement.classList.add('d-none');
+                statusAlertElement.classList.remove('alert-success', 'alert-danger');
+        };
+
+        // 1) Clears when browser blocks submit due to missing required fields
+        formElement.addEventListener('invalid', hideStatus, true);
+
+        // 2) Clears as soon as the user starts fixing any field
+        formElement.addEventListener('input', (event) =>
+                {
+                        if (event.target.matches('input, select, textarea')) hideStatus();
+                });
+
+        // 3) Force browsers to run native constraint validation before submitting
+        formElement.addEventListener('submit', (event) =>
+                {
+                        if (!formElement.reportValidity())
+                        {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                return;
+                        }
+
+                        hideStatus();
+                });
 }
 
 // Run immediately because <script> is deferred
 initializeNav();
-initializeContactForm();
-initializeApplyForm();
+initializeForm('contactForm', 'contactStatus');
+initializeForm('applyForm', 'applyStatus');
