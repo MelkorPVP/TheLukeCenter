@@ -1,14 +1,11 @@
 <?php
-    require_once __DIR__ . '/config/config.php';
-    
-    $container = require __DIR__ . '/initialization.php';
+    $container = require __DIR__ . '/../app/bootstrap.php';
     $config = $container['config'];
-    
-    require_once __DIR__ . '/sharedVariables.php';
-    
+    $logger = $container['logger'];
+
     $pageTitle = 'Alumni – The Luke Center';
     $activeNav = 'alumni';
-    
+
     // Insert HTML header.
     require __DIR__ . '/header.php';
 ?>

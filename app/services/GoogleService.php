@@ -1,9 +1,11 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/Logger.php';
+
 /**
  * Google API helpers for Sheets and Gmail via OAuth 2.0.
- * Token storage path is controlled from config/app.php via:
+ * Token storage path is controlled from app/config.php via:
  *   'token_base_dir' => '/home3/youraccount',
  *   'token_subdir'   => 'tokenStorage',
  *   // optional: 'token_file' => 'google-api-oauth-token.json'
@@ -237,8 +239,12 @@ function google_http_raw(
     ?array $body = null,
     string $method = 'GET',
     string $contentType = 'application/x-www-form-urlencoded',
-    array $headers = []
+    array $headers = [],
+    ?AppLogger $logger = null
 ): string {
+    if ($logger !== null) {
+        $logger->info('Calling Google endpoint', ['url' => $url, 'method' => $method]);
+    }
     $ch = curl_init($url);
 
     if ($method === 'POST') {
@@ -268,6 +274,9 @@ function google_http_raw(
     if ($response === false) {
         $err = curl_error($ch);
         curl_close($ch);
+        if ($logger !== null) {
+            $logger->error('cURL error', ['url' => $url, 'error' => $err]);
+        }
         throw new RuntimeException('cURL error: ' . $err);
     }
 
@@ -275,6 +284,9 @@ function google_http_raw(
     curl_close($ch);
 
     if ($status >= 400) {
+        if ($logger !== null) {
+            $logger->error('HTTP error from Google', ['status' => $status, 'response' => $response]);
+        }
         throw new RuntimeException("HTTP {$status}: {$response}");
     }
 
@@ -294,7 +306,8 @@ function google_http_request(
     ?array $body = null,
     string $method = 'GET',
     string $contentType = 'application/json',
-    array $googleConfig = []
+    array $googleConfig = [],
+    ?AppLogger $logger = null
 ): array {
     if ($params) {
         $url .= '?' . http_build_query($params);
@@ -303,7 +316,7 @@ function google_http_request(
     $token   = google_get_or_refresh_access_token($googleConfig);
     $headers = ['Authorization: Bearer ' . $token];
 
-    $resp = google_http_raw($url, $body, $method, $contentType, $headers);
+    $resp = google_http_raw($url, $body, $method, $contentType, $headers, $logger);
     $json = json_decode($resp, true);
 
     return is_array($json) ? $json : [];
@@ -324,7 +337,8 @@ function google_http_request(
 function google_sheets_get_values(
     array $googleConfig,
     array $sheetConfig,
-    ?string $rangeOverride = null
+    ?string $rangeOverride = null,
+    ?AppLogger $logger = null
 ): array {
     $spreadsheetId = $sheetConfig['spreadsheet_id'] ?? '';
     $defaultRange  = $sheetConfig['range'] ?? '';
@@ -348,7 +362,8 @@ function google_sheets_get_values(
         null,
         'GET',
         'application/json',
-        $googleConfig
+        $googleConfig,
+        $logger
     );
 
     $values = $response['values'] ?? [];
@@ -366,7 +381,8 @@ function google_sheets_append_row(
     array $googleConfig,
     string $spreadsheetId,
     string $range,
-    array $values
+    array $values,
+    ?AppLogger $logger = null
 ): void {
     if ($spreadsheetId === '' || $range === '') {
         throw new RuntimeException('Missing spreadsheetId or range for google_sheets_append_row().');
@@ -384,7 +400,8 @@ function google_sheets_append_row(
         ['values' => [$values]],
         'POST',
         'application/json',
-        $googleConfig
+        $googleConfig,
+        $logger
     );
 }
 
@@ -399,7 +416,8 @@ function gmail_send_message(
     string $from,
     array $to,
     string $subject,
-    string $body
+    string $body,
+    ?AppLogger $logger = null
 ): void {
     // Build raw RFC 2822 message.
     $headers = [
@@ -421,6 +439,7 @@ function gmail_send_message(
         ['raw' => $encoded],
         'POST',
         'application/json',
-        $googleConfig
+        $googleConfig,
+        $logger
     );
 }

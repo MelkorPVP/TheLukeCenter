@@ -1,5 +1,7 @@
 <?php
-    require_once __DIR__ . '/config/config.php';
+    $container = require __DIR__ . '/../app/bootstrap.php';
+    $config    = $container['config'] ?? [];
+    $logger    = $container['logger'] ?? null;
 	
 	//Header Location
 	$HEADERLOCATION = 'Location: apply.php#applyStatus';
@@ -70,17 +72,8 @@
 	// PROCESS FORM 
 	try 
 	{
-		// Load configuration and form helpers
-		$container = require __DIR__ . '/initialization.php';
-		$config    = $container['config'] ?? [];
-		
-		if (!is_array($config)) 
-		{
-			throw new RuntimeException('Application configuration is not available.');
-		}
-		
-		/**
-			* Mapping HTML field names → keys expected by handle_application_submission()
+                /**
+                        * Mapping HTML field names → keys expected by handle_application_submission()
 			*
 			* forms.php expects fields:
 			*   applicantFirstName, applicantLastName, applicantPreferredName, applicantPronouns,
@@ -154,7 +147,7 @@
 		//  - validate required fields + emails
 		//  - append a row to the application Google Sheet
 		//  - send an email notification with full application details
-		handle_application_submission($config, $payload);
+                handle_application_submission($config, $payload, $logger);
 		
 		// SUCCESS MESSAGE	
 		$_SESSION['message'] = 'Application submitted successfully! Thank you.';
@@ -166,26 +159,17 @@
 		$_SESSION['message'] = $e->getMessage();
 		$_SESSION['messageType'] = 'error';
 	} 
-	catch (Throwable $e) 
-	{
-		// DEBUG FORM SUBMISSIONS
-		// $logFile  = __DIR__ . '/apply-forms-error.log';
-		// $logEntry = sprintf(
-        // "[%s] [contact] %s: %s\nFile: %s:%d\nTrace:\n%s\n\n",
-        // date('c'),
-        // get_class($e),
-        // $e->getMessage(),
-        // $e->getFile(),
-        // $e->getLine(),
-        // $e->getTraceAsString()
-		// );
-		
-		// file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX);
-		
-		// Any other unexpected error (Sheets / Gmail / config issues)
-		$_SESSION['message'] = 'There was a problem submitting the application. Please try again later.';
-		$_SESSION['messageType'] = 'error';
-	}
+        catch (Throwable $e)
+        {
+                if ($logger instanceof AppLogger) {
+                        $logger->error('Application submission failed', [
+                                'error' => $e->getMessage(),
+                        ]);
+                }
+
+                $_SESSION['message'] = 'There was a problem submitting the application. Please try again later.';
+                $_SESSION['messageType'] = 'error';
+        }
 	
 	// Redirect back to contact.php with status anchor
 	header($HEADERLOCATION);

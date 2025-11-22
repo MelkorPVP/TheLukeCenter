@@ -1,20 +1,17 @@
-<?php    
-    require_once __DIR__ . '/config/config.php';
-    
-    $container = require __DIR__ . '/initialization.php';
+<?php
+    $container = require __DIR__ . '/../app/bootstrap.php';
     $config = $container['config'];
-    
-    require_once __DIR__ . '/sharedVariables.php';
-    
-    $directors = site_content_directors($config);
-    $executiveChair = site_content_role($config, 'executive_chair');
-    $executiveViceChair = site_content_role($config, 'executive_vicechair');
-    $executiveTreasurer = site_content_role($config, 'executive_treasurer');
-    $executiveSecretary = site_content_role($config, 'executive_secretary');
-    
+    $logger = $container['logger'];
+
+    $directors = site_content_directors($config, $logger);
+    $executiveChair = site_content_role($config, 'executive_chair', $logger);
+    $executiveViceChair = site_content_role($config, 'executive_vicechair', $logger);
+    $executiveTreasurer = site_content_role($config, 'executive_treasurer', $logger);
+    $executiveSecretary = site_content_role($config, 'executive_secretary', $logger);
+
     $pageTitle = 'Board of Directors – The Luke Center';
     $activeNav = 'board';
-    
+
     // Insert HTML header.
     require __DIR__ . '/header.php';
 ?>

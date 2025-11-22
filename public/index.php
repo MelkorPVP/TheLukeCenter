@@ -1,10 +1,7 @@
-<?php    
-    require_once __DIR__ . '/config/config.php';
-    
-    $container = require __DIR__ . '/initialization.php';
+<?php
+    $container = require __DIR__ . '/../app/bootstrap.php';
     $config = $container['config'];
-        
-    require_once __DIR__ . '/sharedVariables.php';
+    $logger = $container['logger'];
 
     $pageTitle = 'The Luke Center For Catalytic Leadership';
     $activeNav = 'home';
@@ -30,10 +27,10 @@
                 <p>Today's financial, social, and political challenges underscore the need for catalytic leadership here in the beautiful Pacific Northwest.</p>
                 <p>The solutions to these challenges will be found through vision, building collaborative relationships across sectors, and unwavering passion. The Luke Center is here to help you meet these challenges.</p>
                 <p>Come join us for one of our transformational leadership development trainings!</p>
-                <?php 
+                <?php
                     // Insert HTML lower main section.
-                    require __DIR__ . '/lowerMainSection.php';                 
-                ?>                 
+                    require __DIR__ . '/lowerMainSection.php';
+                ?>
             </div>            
         </div>      
     </div>    
