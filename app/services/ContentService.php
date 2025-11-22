@@ -1,8 +1,9 @@
 <?php
     
     declare(strict_types=1);
-    
-    require_once __DIR__ . '/google.php';
+
+    require_once __DIR__ . '/GoogleService.php';
+    require_once __DIR__ . '/Logger.php';
     
     /**
         * Load key/value content from the Google Sheet.
@@ -14,7 +15,7 @@
         * @param array<string, mixed> $config
         * @return array<string, string>
     */
-    function site_content_values(array $config): array
+    function site_content_values(array $config, ?AppLogger $logger = null): array
     {
         static $cache = null;
         
@@ -32,7 +33,7 @@
         ];
         
         // 2-argument call; function in google.php accepts an optional 3rd param
-        $values = google_sheets_get_values($googleConfig, $siteSheetConfig);
+        $values = google_sheets_get_values($googleConfig, $siteSheetConfig, null, $logger);
         
         $mapped = [];
         foreach ($values as $row) 
@@ -61,9 +62,9 @@
         * @param array<string, mixed> $config
         * @return array<int, array{0:string,1:string}>
     */
-    function site_content_directors(array $config): array
+    function site_content_directors(array $config, ?AppLogger $logger = null): array
     {
-        $values   = site_content_values($config);
+        $values   = site_content_values($config, $logger);
         $raw      = $values['directors'] ?? '';
         $entries  = array_filter(array_map('trim', explode(';', $raw)));
         $directors = [];
@@ -86,9 +87,9 @@
         * @param array<string, mixed> $config
         * @return array{0:string,1:string}
     */
-    function site_content_role(array $config, string $key): array
+    function site_content_role(array $config, string $key, ?AppLogger $logger = null): array
     {
-        $values = site_content_values($config);
+        $values = site_content_values($config, $logger);
         $raw    = $values[$key] ?? '';
         $parts  = array_map('trim', explode('/', $raw));
         
@@ -101,23 +102,23 @@
     /**
         * Application open flag in sheet (“TRUE”, “YES”, “1”)
     */
-    function site_content_application_open(array $config): bool
+    function site_content_application_open(array $config, ?AppLogger $logger = null): bool
     {
-        $value = strtoupper(site_content_values($config)['enable_application'] ?? '');
+        $value = strtoupper(site_content_values($config, $logger)['enable_application'] ?? '');
         return in_array($value, ['TRUE', 'YES', '1'], true);
     }
-    
-    function site_content_program_name(array $config): string
+
+    function site_content_program_name(array $config, ?AppLogger $logger = null): string
     {
-        return site_content_values($config)['program_name'] ?? '';
+        return site_content_values($config, $logger)['program_name'] ?? '';
     }
-    
-    function site_content_program_location(array $config): string
+
+    function site_content_program_location(array $config, ?AppLogger $logger = null): string
     {
-        return site_content_values($config)['program_location'] ?? '';
+        return site_content_values($config, $logger)['program_location'] ?? '';
     }
-    
-    function site_content_program_dates(array $config): string
+
+    function site_content_program_dates(array $config, ?AppLogger $logger = null): string
     {
-        return site_content_values($config)['program_dates'] ?? '';
+        return site_content_values($config, $logger)['program_dates'] ?? '';
     }

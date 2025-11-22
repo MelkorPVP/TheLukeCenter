@@ -1,14 +1,11 @@
 <?php
-    require_once __DIR__ . '/config/config.php';
-    
-    $container = require __DIR__ . '/initialization.php';
+    $container = require __DIR__ . '/../app/bootstrap.php';
     $config = $container['config'];
-    
-    require_once __DIR__ . '/sharedVariables.php';
-    
+    $logger = $container['logger'];
+
     $pageTitle = 'Pacific Program – The Luke Center';
     $activeNav = 'pacific';
-    
+
     // Insert HTML header.
     require __DIR__ . '/header.php';
 ?>
@@ -35,13 +32,13 @@
                                     <p class="mb-1 fw-semibold text-secondary">The Oregon Gardens</p>
                                     <p class="mb-3">October 12th - 16th</p>
                                     <a class="btn btn-brand me-2 mb-1" href="/apply.php" data-application-button>Apply Now</a>
-                                    <a class="btn btn-outline-brand mb-1" href="/catalytic-leadership.php">Explore Catalytic Leadership</a>
+                                    <a class="btn btn-outline-brand mb-1" href="/catalyticLeadership.php">Explore Catalytic Leadership</a>
                                 -->
                                 <h3 class="h5 text-brand mb-1"><?= htmlspecialchars($programName, ENT_QUOTES) ?></h3>
                                 <p class="mb-1 fw-semibold text-secondary"><?= htmlspecialchars($programLocation, ENT_QUOTES) ?></p>
                                 <p class="mb-3"><?= htmlspecialchars($programDates, ENT_QUOTES) ?></p>
                                 <a class="btn btn-brand me-2" href="/apply.php" data-application-button <?= $applicationOpen ? '' : 'disabled' ?>>Apply Now</a>
-                                <a class="btn btn-outline-brand" href="/catalytic-leadership.php">Explore Catalytic Leadership</a>
+                                <a class="btn btn-outline-brand" href="/catalyticLeadership.php">Explore Catalytic Leadership</a>
                             </div>
                         </div>
                     </div>

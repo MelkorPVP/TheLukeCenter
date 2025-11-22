@@ -1,5 +1,7 @@
 <?php
-    require_once __DIR__ . '/config/config.php';
+    $container = require __DIR__ . '/../app/bootstrap.php';
+    $config    = $container['config'] ?? [];
+    $logger    = $container['logger'] ?? null;
 	
 	//Header Location
 	$HEADERLOCATION = 'Location: contact.php#contactStatus';
@@ -52,19 +54,10 @@
 	// PROCESS FORM 
 	try 
 	{
-		// Load configuration and form helpers
-		$container = require __DIR__ . '/initialization.php';
-		$config    = $container['config'] ?? [];
-		
-		if (!is_array($config)) 
-		{
-			throw new RuntimeException('Application configuration is not available.');
-		}
-		
-		// Map POST values to the keys expected by handle_contact_submission()
-		// forms.php expects:
-		//   contactFirstName, contactLastName, contactEmail, contactPhone,
-		//   contactPhoneType, currentWork, yearAttended
+                // Map POST values to the keys expected by handle_contact_submission()
+                // forms.php expects:
+                //   contactFirstName, contactLastName, contactEmail, contactPhone,
+                //   contactPhoneType, currentWork, yearAttended
 		$payload = [
         'contactFirstName' => trim((string)($_POST['contactFirstName'] ?? '')),
         'contactLastName'  => trim((string)($_POST['contactLastName'] ?? '')),
@@ -81,7 +74,7 @@
 		//  - validate required fields + email
 		//  - append a row to the contact Google Sheet
 		//  - send an email notification
-		handle_contact_submission($config, $payload);
+                handle_contact_submission($config, $payload, $logger);
 		
 		// SUCCESS MESSAGE	
 		$_SESSION['message'] = 'Updated contact information submitted successfully! Thank you.';
@@ -94,26 +87,17 @@
 		$_SESSION['message'] = $e->getMessage();
 		$_SESSION['messageType'] = 'error';
 	} 
-	catch (Throwable $e) // Any other unexpected error (Sheets / Gmail / config issues, etc.)
-	{
-		// DEBUG FORM SUBMISSIONS
-		// $logFile  = __DIR__ . '/contact-forms-error.log';
-		// $logEntry = sprintf(
-        // "[%s] [contact] %s: %s\nFile: %s:%d\nTrace:\n%s\n\n",
-        // date('c'),
-        // get_class($e),
-        // $e->getMessage(),
-        // $e->getFile(),
-        // $e->getLine(),
-        // $e->getTraceAsString()
-		// );
-		
-		// file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX);
-		
-		// Any other unexpected error (Sheets / Gmail / config issues)
-		$_SESSION['message'] = 'There was a problem submitting the form. Please try again later.';
-		$_SESSION['messageType'] = 'error';
-	}
+        catch (Throwable $e) // Any other unexpected error (Sheets / Gmail / config issues, etc.)
+        {
+                if ($logger instanceof AppLogger) {
+                        $logger->error('Contact form submission failed', [
+                                'error' => $e->getMessage(),
+                        ]);
+                }
+
+                $_SESSION['message'] = 'There was a problem submitting the form. Please try again later.';
+                $_SESSION['messageType'] = 'error';
+        }
 	
 	// Redirect back to contact.php with status anchor
 	header($HEADERLOCATION);

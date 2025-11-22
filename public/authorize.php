@@ -1,16 +1,15 @@
 <?php
     declare(strict_types=1);
     
-    require_once __DIR__ . '/src/google.php';
-    
+    $container = require __DIR__ . '/../app/bootstrap.php';
+    $googleConfig = $container['config']['google'] ?? [];
+    $logger = $container['logger'] ?? null;
+
     try {
         // Load full application configuration.
-        /** @var array<string,mixed> $appConfig */
-        $appConfig = require __DIR__ . '/config/app.php';
-        $googleConfig = $appConfig['google'] ?? [];
         
         if (empty($googleConfig)) {
-            throw new RuntimeException('Google configuration missing from config/app.php');
+            throw new RuntimeException('Google configuration missing from app/bootstrap.php');
         }
         
         // If Google redirected back here with a ?code=..., finish the exchange.
@@ -48,6 +47,9 @@
         
         } catch (Throwable $e) {
         http_response_code(500);
+        if ($logger instanceof AppLogger) {
+            $logger->error('Authorization exchange failed', ['error' => $e->getMessage()]);
+        }
         echo '<h2>Authorization Error</h2><pre>' .
         htmlspecialchars($e->getMessage(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') .
         '</pre>';

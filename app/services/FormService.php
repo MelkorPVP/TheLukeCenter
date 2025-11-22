@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/google.php';
+require_once __DIR__ . '/GoogleService.php';
+require_once __DIR__ . '/Logger.php';
 
 /**
  * @param array<string, mixed> $config
  * @param array<string, string> $payload
  */
-function handle_contact_submission(array $config, array $payload): void
+function handle_contact_submission(array $config, array $payload, ?AppLogger $logger = null): void
 {
     $fields = [
         'contactFirstName','contactLastName','contactEmail','contactPhone','contactPhoneType','currentWork','yearAttended',
@@ -34,7 +35,8 @@ function handle_contact_submission(array $config, array $payload): void
             $data['contactPhoneType'],
             $data['currentWork'],
             $data['yearAttended'],
-        ]
+        ],
+        $logger
     );
 
     $recipients = $config['email']['recipients'] ?? [];
@@ -52,7 +54,7 @@ function handle_contact_submission(array $config, array $payload): void
             $data['currentWork'],
             $data['yearAttended']
         );
-        gmail_send_message($googleConfig, $from, $recipients, $subject, $body);
+        gmail_send_message($googleConfig, $from, $recipients, $subject, $body, $logger);
     }
 }
 
@@ -60,7 +62,7 @@ function handle_contact_submission(array $config, array $payload): void
  * @param array<string, mixed> $config
  * @param array<string, string> $payload
  */
-function handle_application_submission(array $config, array $payload): void
+function handle_application_submission(array $config, array $payload, ?AppLogger $logger = null): void
 {
     $fields = [
         'applicantFirstName','applicantLastName','applicantPreferredName','applicantPronouns','applicantEmail','applicantPhone',
@@ -127,7 +129,8 @@ function handle_application_submission(array $config, array $payload): void
             $data['questionFour'],
             $data['partialScholarship'],
             $data['assistAmount'],
-        ]
+        ],
+        $logger
     );
 
     $recipients = $config['email']['recipients'] ?? [];
@@ -135,7 +138,7 @@ function handle_application_submission(array $config, array $payload): void
         $from = $config['google']['gmail_sender'] ?? ($recipients[0] ?? '');
         $subject = sprintf('New application: %s %s', $data['applicantFirstName'], $data['applicantLastName']);
         $body = build_application_email_body($timestamp, $data);
-        gmail_send_message($googleConfig, $from, $recipients, $subject, $body);
+        gmail_send_message($googleConfig, $from, $recipients, $subject, $body, $logger);
     }
 }
 

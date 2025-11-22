@@ -1,19 +1,13 @@
 <?php
-    require_once __DIR__ . '/config/config.php';
-    
-    $container = require __DIR__ . '/initialization.php';
+    $container = require __DIR__ . '/../app/bootstrap.php';
     $config = $container['config'];
-    
-    require_once __DIR__ . '/sharedVariables.php';
-    
+    $logger = $container['logger'];
+
     $pageTitle = 'Contact – The Luke Center';
     $activeNav = 'contact';
-    
-    // Check for ACTIVE SESSION
-    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-    
+
     // Check for headers
-    if (!headers_sent()) 
+    if (!headers_sent())
     {
         header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         header('Pragma: no-cache');

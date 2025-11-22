@@ -4,10 +4,18 @@
     
     $pageTitle = $pageTitle ?? 'The Luke Center for Catalytic Leadership';
     $activeNav = $activeNav ?? '';
-    $applicationOpen = $applicationOpen ?? false;
-    $programName = $programName ?? '';
-    $programLocation = $programLocation ?? '';
-    $programDates = $programDates ?? '';
+
+    if (isset($config)) {
+        $programName = $programName ?? site_content_program_name($config, $logger ?? null);
+        $programLocation = $programLocation ?? site_content_program_location($config, $logger ?? null);
+        $programDates = $programDates ?? site_content_program_dates($config, $logger ?? null);
+        $applicationOpen = $applicationOpen ?? site_content_application_open($config, $logger ?? null);
+    } else {
+        $applicationOpen = $applicationOpen ?? false;
+        $programName = $programName ?? '';
+        $programLocation = $programLocation ?? '';
+        $programDates = $programDates ?? '';
+    }
     
 ?>
 <!doctype html>
