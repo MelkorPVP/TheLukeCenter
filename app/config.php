@@ -57,7 +57,7 @@ function app_base_configuration(): array
         // NEW: rotating gallery Drive folder (PROD)
         'gallery_folder_id' => app_read_env('GOOGLE_GALLERY_FOLDER_ID_PROD'),
         'testimonials_spreadsheet_id' => app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID_PROD'),
-        'testimonials_range' => app_read_env('GOOGLE_SITE_TESTIMONIALS_RANGE', 'Feedback!A:A'),
+        'testimonials_range' => app_read_env('GOOGLE_SITE_TESTIMONIALS_RANGE', 'Values!A:A'),
     ];
 
     $testSheets = [
@@ -69,7 +69,7 @@ function app_base_configuration(): array
         'application_sheet_tab' => app_read_env('GOOGLE_APPLICATION_SHEET_TAB_TEST', 'Submissions'),
         'gallery_folder_id' => app_read_env('GOOGLE_GALLERY_FOLDER_ID_TEST'),
         'testimonials_spreadsheet_id' => app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID_TEST'),
-        'testimonials_range' => app_read_env('GOOGLE_SITE_TESTIMONIALS_RANGE_TEST', 'Feedback!A:A'),
+        'testimonials_range' => app_read_env('GOOGLE_SITE_TESTIMONIALS_RANGE_TEST', 'Values!A:A'),
     ];
 
     $gmailSender = app_read_env('GOOGLE_GMAIL_SENDER', 'contact@thelukecenter.org');
