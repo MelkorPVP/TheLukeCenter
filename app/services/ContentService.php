@@ -6,7 +6,83 @@
     require_once __DIR__ . '/Logger.php';
     
     /**
-        * Load key/value content from the Google Sheet.
+        * Location for file-based content cache.
+    */
+    function site_content_cache_path(array $config): string
+    {
+        $dir = APP_ROOT . '/storage/cache';
+
+        if (!is_dir($dir))
+        {
+            mkdir($dir, 0775, true);
+        }
+
+        return $dir . '/site-content-cache.json';
+    }
+
+    /**
+        * Read the cached payload from disk when available.
+        *
+        * @param array<string, mixed> $config
+        * @return array<string, mixed>|null
+        */
+    function site_content_load_cached_payload(array $config, ?AppLogger $logger = null): ?array
+    {
+        $path = site_content_cache_path($config);
+
+        if (!is_file($path))
+        {
+            return null;
+        }
+
+        $raw = file_get_contents($path);
+        if ($raw === false)
+        {
+            return null;
+        }
+
+        $data = json_decode($raw, true);
+        if (!is_array($data))
+        {
+            return null;
+        }
+
+        if ($logger instanceof AppLogger && $logger->isEnabled())
+        {
+            $logger->info('Loaded site content cache', [
+                'path' => $path,
+                'generated_at' => $data['generated_at'] ?? null,
+            ]);
+        }
+
+        return $data;
+    }
+
+    /**
+        * Persist the aggregated payload for runtime reads.
+        *
+        * @param array<string, mixed> $payload
+        */
+    function site_content_save_cache(array $config, array $payload, ?AppLogger $logger = null): void
+    {
+        $path = site_content_cache_path($config);
+
+        $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        file_put_contents($path, (string) $json, LOCK_EX);
+
+        if ($logger instanceof AppLogger && $logger->isEnabled())
+        {
+            $logger->info('Site content cache refreshed', [
+                'path' => $path,
+                'values_count' => count($payload['values'] ?? []),
+                'testimonials_count' => count($payload['testimonials'] ?? []),
+                'images_count' => count($payload['images'] ?? []),
+            ]);
+        }
+    }
+
+    /**
+        * Pull key/value content directly from Google Sheets.
         *
         * Sheet shape (2 columns):
         *   Col A: key
@@ -15,44 +91,87 @@
         * @param array<string, mixed> $config
         * @return array<string, string>
     */
-    function site_content_values(array $config, ?AppLogger $logger = null): array
+    function site_content_fetch_values_from_google(array $config, ?AppLogger $logger = null): array
     {
-        static $cache = null;
-        
-        if ($cache !== null) 
-        {
-            return $cache;
-        }
-        
         $googleConfig = $config['google'] ?? [];
-        
+
         // Build the sheet configuration array expected by google_sheets_get_values()
         $siteSheetConfig = [
         'spreadsheet_id' => $config['google']['site_values_spreadsheet_id'] ?? '',
         'range'          => $config['google']['site_values_range'] ?? 'Values!A:B',
         ];
-        
+
         // 2-argument call; function in google.php accepts an optional 3rd param
         $values = google_sheets_get_values($googleConfig, $siteSheetConfig, null, $logger);
-        
+
         $mapped = [];
-        foreach ($values as $row) 
+        foreach ($values as $row)
         {
-            if (!isset($row[0]) || !isset($row[1])) 
+            if (!isset($row[0]) || !isset($row[1]))
             {
                 continue;
             }
-            
+
             $key = trim((string)$row[0]);
-            if ($key === '') 
+            if ($key === '')
             {
                 continue;
             }
-            
+
             $mapped[$key] = trim((string)$row[1]);
         }
-        
-        $cache = $mapped;
+
+        return $mapped;
+    }
+
+    /**
+        * Resolve the content payload, preferring the on-disk cache and falling back
+        * to fresh Google requests if necessary.
+        *
+        * @param array<string, mixed> $config
+        * @return array<string, mixed>
+    */
+    function site_content_resolve_payload(array $config, ?AppLogger $logger = null): array
+    {
+        static $payload = null;
+
+        if ($payload !== null)
+        {
+            return $payload;
+        }
+
+        $cached = site_content_load_cached_payload($config, $logger);
+        if ($cached !== null)
+        {
+            $payload = $cached;
+            return $payload;
+        }
+
+        $payload = site_content_fetch_payload($config, $logger);
+        site_content_save_cache($config, $payload, $logger);
+
+        return $payload;
+    }
+
+    /**
+        * Load key/value content from the cached payload (or Google when needed).
+        *
+        * @param array<string, mixed> $config
+        * @return array<string, string>
+    */
+    function site_content_values(array $config, ?AppLogger $logger = null): array
+    {
+        static $cache = null;
+
+        if ($cache !== null)
+        {
+            return $cache;
+        }
+
+        $payload = site_content_resolve_payload($config, $logger);
+        $values = $payload['values'] ?? [];
+
+        $cache = is_array($values) ? $values : [];
         return $cache;
     }
     
@@ -136,28 +255,42 @@
     function site_content_testimonials(array $config, ?AppLogger $logger = null): array
     {
         static $cache = null;
-        
+
         if ($cache !== null) {
             return $cache;
         }
-        
+
+        $payload = site_content_resolve_payload($config, $logger);
+        $items = $payload['testimonials'] ?? [];
+
+        $cache = is_array($items) ? $items : [];
+        return $cache;
+    }
+
+    /**
+        * Testimonials directly from Google Sheets (bypassing cache).
+        *
+        * @param array<string, mixed> $config
+        * @return array<int, string>
+    */
+    function site_content_fetch_testimonials_from_google(array $config, ?AppLogger $logger = null): array
+    {
         $googleConfig = $config['google'] ?? [];
-        
+
         $spreadsheetId = $config['google']['testimonials_spreadsheet_id'] ?? '';
         $range         = $config['google']['testimonials_range'] ?? 'Values!A:A';
-        
+
         if ($spreadsheetId === '') {
-            $cache = [];
-            return $cache;
+            return [];
         }
-        
+
         $sheetConfig = [
         'spreadsheet_id' => $spreadsheetId,
         'range' => $range,
         ];
-        
+
         $rows = google_sheets_get_values($googleConfig, $sheetConfig, null, $logger);
-        
+
         $items = [];
         foreach ($rows as $row) {
             $value = trim((string) ($row[0] ?? ''));
@@ -165,7 +298,80 @@
                 $items[] = $value;
             }
         }
-        
-        $cache = $items;
-        return $cache;
+
+        return $items;
+    }
+
+    /**
+        * Drive gallery entries directly from Google (bypassing cache).
+        *
+        * @param array<string, mixed> $config
+        * @return array<int, array<string, string>>
+    */
+    function site_content_fetch_gallery_images_from_google(array $config, ?AppLogger $logger = null): array
+    {
+        $googleConfig = $config['google'] ?? [];
+        $folderId = (string) ($config['google']['gallery_folder_id'] ?? '');
+
+        if ($folderId === '') {
+            return [];
+        }
+
+        $files = google_drive_list_images_in_folder($googleConfig, $folderId, 80, $logger);
+
+        // Sort by file name so the order is deterministic for caching and rotations.
+        usort($files, static function (array $a, array $b): int {
+            return strcmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
+        });
+
+        $images = [];
+        foreach ($files as $f) {
+            $id   = (string) ($f['id'] ?? '');
+            $name = (string) ($f['name'] ?? '');
+
+            if ($id === '') continue;
+
+            $images[] = [
+            'id' => $id,
+            'name' => $name,
+            'url' => google_drive_build_image_url($id, 1600),
+            ];
+        }
+
+        // Remove duplicate IDs to prevent broken rotations when Drive contains aliases.
+        return array_values(array_unique($images, SORT_REGULAR));
+    }
+
+    /**
+        * Aggregate all Google-backed content into a single payload for caching.
+        *
+        * @param array<string, mixed> $config
+        * @return array<string, mixed>
+    */
+    function site_content_fetch_payload(array $config, ?AppLogger $logger = null): array
+    {
+        $values = site_content_fetch_values_from_google($config, $logger);
+        $testimonials = site_content_fetch_testimonials_from_google($config, $logger);
+        $images = site_content_fetch_gallery_images_from_google($config, $logger);
+
+        return [
+            'generated_at' => time(),
+            'values' => $values,
+            'testimonials' => $testimonials,
+            'images' => $images,
+        ];
+    }
+
+    /**
+        * Gallery images sourced from the cached payload (or Google as a fallback).
+        *
+        * @param array<string, mixed> $config
+        * @return array<int, array<string, string>>
+    */
+    function site_content_gallery_images(array $config, ?AppLogger $logger = null): array
+    {
+        $payload = site_content_resolve_payload($config, $logger);
+        $images = $payload['images'] ?? [];
+
+        return is_array($images) ? $images : [];
     }
