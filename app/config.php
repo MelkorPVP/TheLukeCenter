@@ -45,12 +45,10 @@ function app_email_list(string $raw): array
 
 function app_base_configuration(): array
 {
-    // Prefer environment-specific variables but fall back to generic names when provided.
+    // Prefer environment-specific variables. Keep test configuration completely separate
+    // from production so cached data and sheet selections never overlap.
     $prodSheets = [
-        'site_values_spreadsheet_id' => app_read_env(
-            'GOOGLE_SITE_VALUES_SHEET_ID_PROD',
-            app_read_env('GOOGLE_SITE_VALUES_SHEET_ID')
-        ),
+        'site_values_spreadsheet_id' => app_read_env('GOOGLE_SITE_VALUES_SHEET_ID_PROD'),
         'site_values_range' => app_read_env('GOOGLE_SITE_VALUES_RANGE', 'Values!A:B'),
         'contact_spreadsheet_id' => app_read_env('GOOGLE_CONTACT_SHEET_ID_PROD'),
         'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB', 'Submissions'),
@@ -63,25 +61,15 @@ function app_base_configuration(): array
     ];
 
     $testSheets = [
-        'site_values_spreadsheet_id' => app_read_env(
-            'GOOGLE_SITE_VALUES_SHEET_ID_TEST',
-            app_read_env('GOOGLE_SITE_VALUES_SHEET_ID')
-        ),
+        'site_values_spreadsheet_id' => app_read_env('GOOGLE_SITE_VALUES_SHEET_ID_TEST'),
         'site_values_range' => app_read_env('GOOGLE_SITE_VALUES_RANGE_TEST', 'Values!A:B'),
         'contact_spreadsheet_id' => app_read_env('GOOGLE_CONTACT_SHEET_ID_TEST'),
         'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB_TEST', 'Submissions'),
         'application_spreadsheet_id' => app_read_env('GOOGLE_APPLICATION_SHEET_ID_TEST'),
         'application_sheet_tab' => app_read_env('GOOGLE_APPLICATION_SHEET_TAB_TEST', 'Submissions'),
-            $prodSheets['site_values_spreadsheet_id']
-        ),
-        'site_values_range' => app_read_env('GOOGLE_SITE_VALUES_RANGE_TEST', $prodSheets['site_values_range']),
-        'contact_spreadsheet_id' => app_read_env('GOOGLE_CONTACT_SHEET_ID_TEST', $prodSheets['contact_spreadsheet_id']),
-        'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB_TEST', $prodSheets['contact_sheet_tab']),
-        'application_spreadsheet_id' => app_read_env('GOOGLE_APPLICATION_SHEET_ID_TEST', $prodSheets['application_spreadsheet_id']),
-        'application_sheet_tab' => app_read_env('GOOGLE_APPLICATION_SHEET_TAB_TEST', $prodSheets['application_sheet_tab']),
         'gallery_folder_id' => app_read_env('GOOGLE_GALLERY_FOLDER_ID_TEST'),
         'testimonials_spreadsheet_id' => app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID_TEST'),
-        'testimonials_range' => app_read_env('GOOGLE_SITE_TESTIMONIALS_RANGE', 'Feedback!A:A'),
+        'testimonials_range' => app_read_env('GOOGLE_SITE_TESTIMONIALS_RANGE_TEST', 'Feedback!A:A'),
     ];
 
     $gmailSender = app_read_env('GOOGLE_GMAIL_SENDER', 'contact@thelukecenter.org');
@@ -106,7 +94,7 @@ function app_base_configuration(): array
         ],
         'email' => [
             APP_ENV_PROD => ['recipients' => app_email_list(app_read_env('EMAIL_RECIPIENTS', 'contact@thelukecenter.org'))],
-            APP_ENV_TEST => ['recipients' => app_email_list(app_read_env('EMAIL_RECIPIENTS_TEST', app_read_env('EMAIL_RECIPIENTS', 'contact@thelukecenter.org')))],
+            APP_ENV_TEST => ['recipients' => app_email_list(app_read_env('EMAIL_RECIPIENTS_TEST', 'contact@thelukecenter.org'))],
         ],
         'logging' => [
             'default' => [
