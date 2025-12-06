@@ -4,22 +4,28 @@ declare(strict_types=1);
 
 $bootstrap = require __DIR__ . '/../bootstrap.php';
 
-$config = $bootstrap['config'] ?? [];
-$logger = $bootstrap['logger'] ?? null;
+// Preserve the shared logging config, but rebuild per-environment configs so each
+// warmup run uses its own Google sheet IDs instead of whichever environment was
+// detected when bootstrap.php ran.
+$loggingConfig = $bootstrap['config']['logging'] ?? [];
 
 $exitCode = 0;
 $environments = [APP_ENV_PROD, APP_ENV_TEST];
 
 foreach ($environments as $environment)
 {
-    $envConfig = $config;
-    $envConfig['environment'] = $environment;
+    $envConfig = app_build_configuration($environment);
+    $envLogger = new AppLogger(
+        (bool) ($loggingConfig['enabled'] ?? false),
+        $loggingConfig['file'] ?? (APP_ROOT . '/storage/logs/application.log'),
+        $environment
+    );
 
     try
     {
         // Always fetch fresh content to avoid any in-memory/static caches.
-        $payload = site_content_fetch_payload($envConfig, $logger);
-        site_content_save_cache($envConfig, $payload, $logger);
+        $payload = site_content_fetch_payload($envConfig, $envLogger);
+        site_content_save_cache($envConfig, $payload, $envLogger);
 
         $valuesCount = is_array($payload['values'] ?? null) ? count($payload['values']) : 0;
         $testimonialsCount = is_array($payload['testimonials'] ?? null) ? count($payload['testimonials']) : 0;
@@ -44,9 +50,9 @@ foreach ($environments as $environment)
     }
     catch (Throwable $e)
     {
-        if ($logger instanceof AppLogger && $logger->isEnabled())
+        if ($envLogger->isEnabled())
         {
-            $logger->error('Content cache warmup failed', [
+            $envLogger->error('Content cache warmup failed', [
                 'environment' => $environment,
                 'exception' => get_class($e),
                 'code' => $e->getCode(),
