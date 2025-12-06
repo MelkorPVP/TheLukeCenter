@@ -95,10 +95,32 @@
     {
         $googleConfig = $config['google'] ?? [];
 
+        $environment = (string) ($config['environment'] ?? APP_ENV_PROD);
+        $spreadsheetId = (string) ($config['google']['site_values_spreadsheet_id'] ?? '');
+        $range         = (string) ($config['google']['site_values_range'] ?? 'Values!A:B');
+
+        if ($spreadsheetId === '')
+        {
+            $hint = $environment === APP_ENV_TEST
+                ? 'Set GOOGLE_SITE_VALUES_SHEET_ID_TEST (or GOOGLE_SITE_VALUES_SHEET_ID_PROD as a fallback).'
+                : 'Set GOOGLE_SITE_VALUES_SHEET_ID_PROD.';
+
+            throw new RuntimeException('Missing Google Sheet ID for site values. ' . $hint);
+        }
+
+        if ($range === '')
+        {
+            $hint = $environment === APP_ENV_TEST
+                ? 'Set GOOGLE_SITE_VALUES_RANGE_TEST (or GOOGLE_SITE_VALUES_RANGE).'
+                : 'Set GOOGLE_SITE_VALUES_RANGE.';
+
+            throw new RuntimeException('Missing range for site values Google Sheet. ' . $hint);
+        }
+
         // Build the sheet configuration array expected by google_sheets_get_values()
         $siteSheetConfig = [
-        'spreadsheet_id' => $config['google']['site_values_spreadsheet_id'] ?? '',
-        'range'          => $config['google']['site_values_range'] ?? 'Values!A:B',
+        'spreadsheet_id' => $spreadsheetId,
+        'range'          => $range,
         ];
 
         // 2-argument call; function in google.php accepts an optional 3rd param
