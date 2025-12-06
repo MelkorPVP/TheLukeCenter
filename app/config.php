@@ -8,6 +8,7 @@ const APP_ENV_TEST = 'test';
 function app_detect_environment(): string
 {
     // Allow explicit environment selection via env vars.
+    // Allow explicit environment selection for CLI contexts (e.g., cron) via env vars.
     $envOverride = getenv('APP_ENV') ?: getenv('APP_ENVIRONMENT');
     if (is_string($envOverride) && $envOverride !== '') {
         $normalized = strtolower(trim($envOverride));
@@ -71,6 +72,13 @@ function app_base_configuration(): array
         'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB_TEST', 'Submissions'),
         'application_spreadsheet_id' => app_read_env('GOOGLE_APPLICATION_SHEET_ID_TEST'),
         'application_sheet_tab' => app_read_env('GOOGLE_APPLICATION_SHEET_TAB_TEST', 'Submissions'),
+            $prodSheets['site_values_spreadsheet_id']
+        ),
+        'site_values_range' => app_read_env('GOOGLE_SITE_VALUES_RANGE_TEST', $prodSheets['site_values_range']),
+        'contact_spreadsheet_id' => app_read_env('GOOGLE_CONTACT_SHEET_ID_TEST', $prodSheets['contact_spreadsheet_id']),
+        'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB_TEST', $prodSheets['contact_sheet_tab']),
+        'application_spreadsheet_id' => app_read_env('GOOGLE_APPLICATION_SHEET_ID_TEST', $prodSheets['application_spreadsheet_id']),
+        'application_sheet_tab' => app_read_env('GOOGLE_APPLICATION_SHEET_TAB_TEST', $prodSheets['application_sheet_tab']),
         'gallery_folder_id' => app_read_env('GOOGLE_GALLERY_FOLDER_ID_TEST'),
         'testimonials_spreadsheet_id' => app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID_TEST'),
         'testimonials_range' => app_read_env('GOOGLE_SITE_TESTIMONIALS_RANGE', 'Feedback!A:A'),

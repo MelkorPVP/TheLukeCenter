@@ -107,6 +107,8 @@
             $hint = $environment === APP_ENV_TEST
                 ? 'Set GOOGLE_SITE_VALUES_SHEET_ID_TEST (or GOOGLE_SITE_VALUES_SHEET_ID).'
                 : 'Set GOOGLE_SITE_VALUES_SHEET_ID_PROD (or GOOGLE_SITE_VALUES_SHEET_ID).';
+                ? 'Set GOOGLE_SITE_VALUES_SHEET_ID_TEST (or GOOGLE_SITE_VALUES_SHEET_ID_PROD as a fallback).'
+                : 'Set GOOGLE_SITE_VALUES_SHEET_ID_PROD.';
 
             throw new RuntimeException('Missing Google Sheet ID for site values. ' . $hint);
         }
