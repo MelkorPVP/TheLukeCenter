@@ -16,6 +16,7 @@ try {
     site_content_save_cache($config, $payload, $logger);
 
     $summary = [
+        'environment' => $config['environment'] ?? '',
         'values_count' => count($payload['values'] ?? []),
         'testimonials_count' => count($payload['testimonials'] ?? []),
         'images_count' => count($payload['images'] ?? []),
@@ -33,10 +34,23 @@ try {
 
     exit(0);
 } catch (Throwable $e) {
+    $message = $e->getMessage();
+
     if ($logger instanceof AppLogger) {
-        $logger->error('Content cache warmup failed', ['error' => $e->getMessage()]);
+        $logger->error('Content cache warmup failed', ['error' => $message]);
     }
 
-    fwrite(STDERR, 'Content cache warmup failed: ' . $e->getMessage() . "\n");
+    fwrite(STDERR, 'Content cache warmup failed: ' . $message . "\n");
+
+    // The cron job uses this script; when required GOOGLE_* env vars are missing, spell out
+    // that the warmup (and thus cron) will keep failing until those values are provided.
+    if ($e instanceof RuntimeException) {
+        fwrite(
+            STDERR,
+            "Set the needed Google Sheet env vars (e.g., GOOGLE_SITE_VALUES_SHEET_ID_*) before rerunning warm_content_cache.php.\n"
+            . "If your cron should use test data, prefix the command with APP_ENV=test so it matches the website configuration.\n"
+        );
+    }
+
     exit(1);
 }
