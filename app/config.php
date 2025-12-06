@@ -48,8 +48,8 @@ function app_base_configuration(): array
     // Prefer environment-specific variables. Keep test configuration completely separate
     // from production so cached data and sheet selections never overlap.
     $prodSheets = [
-        'site_values_spreadsheet_id' => app_read_env('GOOGLE_SITE_VALUES_SHEET_ID_PROD', app_read_env('GOOGLE_SITE_VALUES_SHEET_ID')),
-        'site_values_range' => app_read_env('GOOGLE_SITE_VALUES_RANGE_PROD', app_read_env('GOOGLE_SITE_VALUES_RANGE', 'Values!A:B')),
+        'site_values_spreadsheet_id' => app_read_env('GOOGLE_SITE_VALUES_SHEET_ID_PROD'),
+        'site_values_range' => app_read_env('GOOGLE_SITE_VALUES_RANGE_PROD'),
         'contact_spreadsheet_id' => app_read_env('GOOGLE_CONTACT_SHEET_ID_PROD'),
         'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB', 'Submissions'),
         'application_spreadsheet_id' => app_read_env('GOOGLE_APPLICATION_SHEET_ID_PROD'),
@@ -61,8 +61,8 @@ function app_base_configuration(): array
     ];
 
     $testSheets = [
-        'site_values_spreadsheet_id' => app_read_env('GOOGLE_SITE_VALUES_SHEET_ID_TEST', app_read_env('GOOGLE_SITE_VALUES_SHEET_ID')),
-        'site_values_range' => app_read_env('GOOGLE_SITE_VALUES_RANGE_TEST', app_read_env('GOOGLE_SITE_VALUES_RANGE', 'Values!A:B')),
+        'site_values_spreadsheet_id' => app_read_env('GOOGLE_SITE_VALUES_SHEET_ID_TEST'),
+        'site_values_range' => app_read_env('GOOGLE_SITE_VALUES_RANGE_TEST'),
         'contact_spreadsheet_id' => app_read_env('GOOGLE_CONTACT_SHEET_ID_TEST'),
         'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB_TEST', 'Submissions'),
         'application_spreadsheet_id' => app_read_env('GOOGLE_APPLICATION_SHEET_ID_TEST'),
