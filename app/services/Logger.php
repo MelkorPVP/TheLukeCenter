@@ -4,15 +4,32 @@ declare(strict_types=1);
 
 class AppLogger
 {
+    /**
+     * Whether logging is active.
+     */
     private bool $enabled;
+
+    /**
+     * Full path to the log file on disk.
+     */
     private string $filePath;
+
+    /**
+     * Current environment tag (prod/test) to prefix log lines.
+     */
     private string $environment;
+
+    /**
+     * Per-request identifier to correlate log messages across the request lifecycle.
+     */
+    private string $requestId;
 
     public function __construct(bool $enabled, string $filePath, string $environment)
     {
         $this->enabled = $enabled;
         $this->filePath = $filePath;
         $this->environment = $environment;
+        $this->requestId = bin2hex(random_bytes(8));
         $this->ensureDirectory();
     }
 
@@ -24,6 +41,15 @@ class AppLogger
     public function isEnabled(): bool
     {
         return $this->enabled;
+    }
+
+    /**
+     * Expose the generated request identifier so application code can include
+     * it in headers or debugging output when necessary.
+     */
+    public function getRequestId(): string
+    {
+        return $this->requestId;
     }
 
     public function info(string $message, array $context = []): void
@@ -44,14 +70,16 @@ class AppLogger
 
         $timestamp = (new DateTimeImmutable())->format('c');
         $line = sprintf(
-            '[%s] [%s] [%s] %s',
+            '[%s] [%s] [%s] [RID:%s] %s',
             $timestamp,
             strtoupper($level),
             strtoupper($this->environment),
+            $this->requestId,
             $message
         );
 
         if (!empty($context)) {
+            // Avoid noisy numeric keys and keep the log JSON consistent.
             $line .= ' ' . json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
 
