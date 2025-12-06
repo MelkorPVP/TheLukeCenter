@@ -12,12 +12,15 @@
     {
         $dir = APP_ROOT . '/storage/cache';
 
+        $environment = (string) ($config['environment'] ?? APP_ENV_PROD);
+        $suffix = $environment === APP_ENV_TEST ? '-test' : '-prod';
+
         if (!is_dir($dir))
         {
             mkdir($dir, 0775, true);
         }
 
-        return $dir . '/site-content-cache.json';
+        return $dir . '/site-content-cache' . $suffix . '.json';
     }
 
     /**
@@ -102,6 +105,8 @@
         if ($spreadsheetId === '')
         {
             $hint = $environment === APP_ENV_TEST
+                ? 'Set GOOGLE_SITE_VALUES_SHEET_ID_TEST (or GOOGLE_SITE_VALUES_SHEET_ID).'
+                : 'Set GOOGLE_SITE_VALUES_SHEET_ID_PROD (or GOOGLE_SITE_VALUES_SHEET_ID).';
                 ? 'Set GOOGLE_SITE_VALUES_SHEET_ID_TEST (or GOOGLE_SITE_VALUES_SHEET_ID_PROD as a fallback).'
                 : 'Set GOOGLE_SITE_VALUES_SHEET_ID_PROD.';
 
@@ -155,24 +160,25 @@
     */
     function site_content_resolve_payload(array $config, ?AppLogger $logger = null): array
     {
-        static $payload = null;
+        static $payloads = [];
+        $env = (string) ($config['environment'] ?? APP_ENV_PROD);
 
-        if ($payload !== null)
+        if (array_key_exists($env, $payloads))
         {
-            return $payload;
+            return $payloads[$env];
         }
 
         $cached = site_content_load_cached_payload($config, $logger);
         if ($cached !== null)
         {
-            $payload = $cached;
-            return $payload;
+            $payloads[$env] = $cached;
+            return $payloads[$env];
         }
 
-        $payload = site_content_fetch_payload($config, $logger);
-        site_content_save_cache($config, $payload, $logger);
+        $payloads[$env] = site_content_fetch_payload($config, $logger);
+        site_content_save_cache($config, $payloads[$env], $logger);
 
-        return $payload;
+        return $payloads[$env];
     }
 
     /**
@@ -183,18 +189,19 @@
     */
     function site_content_values(array $config, ?AppLogger $logger = null): array
     {
-        static $cache = null;
+        static $cache = [];
+        $env = (string) ($config['environment'] ?? APP_ENV_PROD);
 
-        if ($cache !== null)
+        if (array_key_exists($env, $cache))
         {
-            return $cache;
+            return $cache[$env];
         }
 
         $payload = site_content_resolve_payload($config, $logger);
         $values = $payload['values'] ?? [];
 
-        $cache = is_array($values) ? $values : [];
-        return $cache;
+        $cache[$env] = is_array($values) ? $values : [];
+        return $cache[$env];
     }
     
     /**
@@ -276,17 +283,18 @@
     */
     function site_content_testimonials(array $config, ?AppLogger $logger = null): array
     {
-        static $cache = null;
+        static $cache = [];
+        $env = (string) ($config['environment'] ?? APP_ENV_PROD);
 
-        if ($cache !== null) {
-            return $cache;
+        if (array_key_exists($env, $cache)) {
+            return $cache[$env];
         }
 
         $payload = site_content_resolve_payload($config, $logger);
         $items = $payload['testimonials'] ?? [];
 
-        $cache = is_array($items) ? $items : [];
-        return $cache;
+        $cache[$env] = is_array($items) ? $items : [];
+        return $cache[$env];
     }
 
     /**

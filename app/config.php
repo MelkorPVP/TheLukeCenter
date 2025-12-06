@@ -7,6 +7,7 @@ const APP_ENV_TEST = 'test';
 
 function app_detect_environment(): string
 {
+    // Allow explicit environment selection via env vars.
     // Allow explicit environment selection for CLI contexts (e.g., cron) via env vars.
     $envOverride = getenv('APP_ENV') ?: getenv('APP_ENVIRONMENT');
     if (is_string($envOverride) && $envOverride !== '') {
@@ -64,6 +65,13 @@ function app_base_configuration(): array
     $testSheets = [
         'site_values_spreadsheet_id' => app_read_env(
             'GOOGLE_SITE_VALUES_SHEET_ID_TEST',
+            app_read_env('GOOGLE_SITE_VALUES_SHEET_ID')
+        ),
+        'site_values_range' => app_read_env('GOOGLE_SITE_VALUES_RANGE_TEST', 'Values!A:B'),
+        'contact_spreadsheet_id' => app_read_env('GOOGLE_CONTACT_SHEET_ID_TEST'),
+        'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB_TEST', 'Submissions'),
+        'application_spreadsheet_id' => app_read_env('GOOGLE_APPLICATION_SHEET_ID_TEST'),
+        'application_sheet_tab' => app_read_env('GOOGLE_APPLICATION_SHEET_TAB_TEST', 'Submissions'),
             $prodSheets['site_values_spreadsheet_id']
         ),
         'site_values_range' => app_read_env('GOOGLE_SITE_VALUES_RANGE_TEST', $prodSheets['site_values_range']),
@@ -113,12 +121,12 @@ function app_base_configuration(): array
 function app_build_configuration(string $environment): array
 {
     $base = app_base_configuration();
-    $sheetSet = $base['sheets'][$environment] ?? $base['sheets'][APP_ENV_PROD];
+    $sheetSet = $base['sheets'][$environment] ?? [];
 
     return [
         'environment' => $environment,
         'google' => array_merge($base['google'], $sheetSet),
-        'email' => $base['email'][$environment] ?? $base['email'][APP_ENV_PROD],
+        'email' => $base['email'][$environment] ?? ['recipients' => ['contact@thelukecenter.org']],
         'logging' => [
             'enabled' => (bool) ($base['logging']['default'][$environment] ?? false),
             'file' => $base['logging']['file'],
