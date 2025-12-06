@@ -114,8 +114,8 @@
         if ($range === '')
         {
             $hint = $environment === APP_ENV_TEST
-                ? 'Set GOOGLE_SITE_VALUES_RANGE_TEST (or GOOGLE_SITE_VALUES_RANGE).'
-                : 'Set GOOGLE_SITE_VALUES_RANGE.';
+                ? 'Set GOOGLE_SITE_VALUES_RANGE (or GOOGLE_SITE_VALUES_RANGE_TEST).'
+                : 'Set GOOGLE_SITE_VALUES_RANGE (or GOOGLE_SITE_VALUES_RANGE_PROD).';
 
             throw new RuntimeException('Missing range for site values Google Sheet. ' . $hint);
         }
