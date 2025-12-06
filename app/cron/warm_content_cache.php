@@ -2,14 +2,9 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../services/Logger.php';
-require_once __DIR__ . '/../services/GoogleService.php';
-require_once __DIR__ . '/../services/ContentService.php';
-
-if (!defined('APP_ROOT')) {
-    define('APP_ROOT', dirname(__DIR__, 1));
-}
+// Reuse the shared bootstrap so environment detection, logger defaults, and
+// service includes stay consistent with the application.
+$bootstrap = require __DIR__ . '/../bootstrap.php';
 
 /**
  * Warm the cache for a specific environment.
