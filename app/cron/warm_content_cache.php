@@ -17,7 +17,9 @@ foreach ($environments as $environment)
 
     try
     {
-        $payload = site_content_resolve_payload($envConfig, $logger);
+        // Always fetch fresh content to avoid any in-memory/static caches.
+        $payload = site_content_fetch_payload($envConfig, $logger);
+        site_content_save_cache($envConfig, $payload, $logger);
 
         $valuesCount = is_array($payload['values'] ?? null) ? count($payload['values']) : 0;
         $testimonialsCount = is_array($payload['testimonials'] ?? null) ? count($payload['testimonials']) : 0;
