@@ -48,7 +48,6 @@ try {
         fwrite(
             STDERR,
             "Set the needed Google Sheet env vars (e.g., GOOGLE_SITE_VALUES_SHEET_ID_*) before rerunning warm_content_cache.php.\n"
-            . "If your cron should use test data, prefix the command with APP_ENV=test so it matches the website configuration.\n"
         );
     }
 
