@@ -1,0 +1,25 @@
+## ------------------------------------------------------------------------------------------------
+##  SCRIPT:         changelog.log
+##  DESCRIPTION:    Any changes made to thelukecenter.org website is documented here.
+##  REQUIREMENTS:   N/A
+##  LOCATION:       http://www.test.thelukecenter.org/changelog.log
+##  AUTHORS:        Chris Pfannkuch; Zack Kepler
+##  MAINTENANCE:
+##  
+##  DATE        CHANGER         CHANGE
+##  --------    ------------    -------------------------------------------------------------------
+##  11/20/2025  C.Pfannkuch     I attempted to implement the Google API for looking up values and supplying them to our PHP pages at runtime.
+##                                  We need to go through page by page and compare the live site to the test site and adjust both code and front end as needed based on testing.
+##  11/20/2025  C.Pfannkuch     Fixed errors in the way shared PHP variables were being used across the site. I moved them to sharedVariables.php for further ease of maintenance.
+##  11/21/2025  C.Pfannkuch     Finished implementing OAuth2 authroization workflows. Got basic form functionality working. It submits, appends row, sends email. Need to fine tune process.
+##  11/21/2025  C.Pfannkuch     Completed a refactor, added logging, moved truly shared application componets to the server root, now lives in 'SERVERROOT/app/...' this creates true
+									isolation for TEST and PROD. Also started to give the application awareness of its own environment to help automate testing and to allow the introduction
+									of distinct data sources (sheets) that are dynamically based on the environment.
+	11/23/2025	Z.Kepler		Changed classes of the cards on board.php to resize and better fit the webpage. 
+	11/23/2025  Z.Kepler		Removed catalytic leadership button on pacificProgram.php for more visual clarity. 
+	11/23/2025  Z.Kepler		Changed font size on navbar.php to be slightly larger. 
+	11/23/2025  Z.Kepler		Changed banner size to be slightly smaller on all pages. 
+	11/23/2025	Z.Kepler		Added favicons and manifest for browser icon formatting. 
+	11/23/2025  Z.Kepler		Updated variable names on handleApply.php.
+	11/23/2025  Z.Kepler		Updated variable names on handleContact.php and contact.php
+## ------------------------------------------------------------------------------------------------

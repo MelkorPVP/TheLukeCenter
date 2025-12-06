@@ -1,0 +1,224 @@
+/*--------------- 
+    BEGIN MAIN THEME STYLE RULES (LUKE CENTER BRAND PALLETE)
+---------------*/
+:root
+{
+    --brand-700:#185644; /* pine green */
+    --brand-600:#2E6B5A;
+    --brand-500:#4E837C;
+    --hero-grad-start:#ECF6FF;
+    --hero-grad-end:#78B7E8;
+    --accent-bg:#f7faf9;
+}
+
+.btn-brand
+{
+    --bs-btn-color:#fff;
+    --bs-btn-bg:var(--brand-700);
+    --bs-btn-border-color:var(--brand-700);
+    --bs-btn-hover-bg:#0f3f31;
+    --bs-btn-hover-border-color:#0f3f31;
+    --bs-btn-font-weight:700;
+}
+
+.btn-outline-brand
+{
+    --bs-btn-color:var(--brand-700);
+    --bs-btn-border-color:var(--brand-700);
+    --bs-btn-hover-color:#fff;
+    --bs-btn-hover-bg:var(--brand-700);
+    --bs-btn-hover-border-color:var(--brand-700);
+    --bs-btn-font-weight:700;
+}
+
+.section-accent
+{
+    background:var(--accent-bg)
+}
+
+.hero
+{
+    background: radial-gradient(100% 120% at 30% 20%, var(--hero-grad-start) 0%, var(--hero-grad-end) 100%);
+}
+
+.text-hero
+{
+    color:#0b2a22
+}
+/*--------------- 
+    END MAIN THEME STYLE RULES 
+---------------*/
+
+/*--------------- 
+    BEGIN H1-H6 STYLE RULES 
+---------------*/
+.letter-wide
+{
+    letter-spacing:.12em
+}
+
+.text-brand
+{
+    color:var(--brand-700) !important
+}
+/*--------------- 
+    END H1-H6 STYLE RULES 
+---------------*/
+
+/*--------------- 
+    BEGIN HEADER & NAVBAR RULES 
+---------------*/
+.site-header .navbar-brand
+{
+    padding: .25rem 0;
+}
+.brand-logo
+{
+    height:44px;
+    width:auto;
+}
+
+.navbar-nav .nav-link
+{
+    color:var(--brand-700);
+    border-radius:.5rem;
+    padding:.5rem .75rem;
+}
+
+.navbar-nav .nav-link:hover
+{
+    background:#e8f3ee;
+}
+
+.navbar-nav .nav-link.active
+{
+    color:#0d3429;
+}
+/*--------------- 
+    END HEADER & NAVBAR RULES 
+---------------*/
+
+/*--------------- 
+    BEGIN FOOTER RULES 
+---------------*/
+footer a
+{
+    color:var(--brand-700)
+}
+
+footer a:hover
+{
+    text-decoration:underline
+}
+/*--------------- 
+    END FOOTER RULES 
+---------------*/
+
+/*--------------- 
+    BEGIN IMAGE RULES 
+---------------*/
+
+#logo-image
+{
+    height: 256px;
+    width: 256px;
+}
+
+/*--------------- 
+    END IMAGE RULES 
+---------------*/
+
+
+
+/*----- 
+    BEGIN MISC RULES 
+-----*/
+
+/* Small Grey Text */
+.small-label
+{
+    font-size: 0.8em;
+    color: #666;
+    margin-left: 5px;
+}
+
+/* Card media */
+.object-cover
+{
+    object-fit:cover;
+    max-height:480px;
+}
+/*--------------- 
+    END MISC RULES 
+---------------*/
+
+/*---------------
+    BEGIN GALLERY RULES
+---------------*/
+
+.lc-gallery
+{
+    border-radius: 1rem;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #e6efe9;
+}
+
+.lc-gallery-frame
+{
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #f7faf9;
+}
+
+.lc-gallery-img
+{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.lc-gallery-arrow
+{
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.85);
+    color: #0d3429;
+    font-size: 1.5rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.lc-gallery-arrow:hover
+{
+    background: rgba(255,255,255,1);
+}
+
+.lc-gallery-prev
+{
+    left: .75rem;
+}
+
+.lc-gallery-next
+{
+    right: .75rem;
+}
+
+.lc-testimonial
+{
+    min-height: 3.5rem;
+}
+
+/*---------------
+    END GALLERY RULES
+---------------*/
