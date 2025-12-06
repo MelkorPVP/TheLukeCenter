@@ -21,6 +21,13 @@ function handle_contact_submission(array $config, array $payload, ?AppLogger $lo
 
     $googleConfig = $config['google'] ?? [];
 
+    if ($logger instanceof AppLogger && $logger->isEnabled()) {
+        $logger->info('Contact form submission received', [
+            'request_id' => $logger->getRequestId(),
+            'fields' => array_keys($data),
+        ]);
+    }
+
     $timestamp = (new DateTimeImmutable('now'))->format('c');
     google_sheets_append_row(
         $googleConfig,
@@ -50,6 +57,13 @@ function handle_contact_submission(array $config, array $payload, ?AppLogger $lo
         $body = build_contact_email_body($timestamp, $data);
         gmail_send_message($googleConfig, $from, $recipients, $subject, $body, $logger);
     }
+
+    if ($logger instanceof AppLogger && $logger->isEnabled()) {
+        $logger->info('Contact form submission completed', [
+            'request_id' => $logger->getRequestId(),
+            'sheet' => $config['google']['contact_spreadsheet_id'] ?? 'unknown',
+        ]);
+    }
 }
 
 /**
@@ -77,6 +91,13 @@ function handle_application_submission(array $config, array $payload, ?AppLogger
     validate_email($data['sponsorEmail'], 'sponsorEmail');
 
     $googleConfig = $config['google'] ?? [];
+
+    if ($logger instanceof AppLogger && $logger->isEnabled()) {
+        $logger->info('Application submission received', [
+            'request_id' => $logger->getRequestId(),
+            'fields' => array_keys($data),
+        ]);
+    }
 
     // // BEGIN LOGGING
     // $log_file = 'forms.php.log';
@@ -137,6 +158,13 @@ function handle_application_submission(array $config, array $payload, ?AppLogger
         $subject = sprintf('New application: %s %s', $data['applicantFirstName'], $data['applicantLastName']);
         $body = build_application_email_body($timestamp, $data);
         gmail_send_message($googleConfig, $from, $recipients, $subject, $body, $logger);
+    }
+
+    if ($logger instanceof AppLogger && $logger->isEnabled()) {
+        $logger->info('Application submission completed', [
+            'request_id' => $logger->getRequestId(),
+            'sheet' => $config['google']['application_spreadsheet_id'] ?? 'unknown',
+        ]);
     }
 }
 

@@ -33,6 +33,16 @@ $override = app_logging_override($config, function () use ($config, $logger) {
 });
 $logger->setEnabled($override);
 
+// Log the request bootstrap step so we can trace from init through completion.
+if ($logger->isEnabled()) {
+    $logger->info('Request bootstrap complete', [
+        'method' => $_SERVER['REQUEST_METHOD'] ?? 'CLI',
+        'uri' => $_SERVER['REQUEST_URI'] ?? '',
+        'remote_addr' => $_SERVER['REMOTE_ADDR'] ?? '',
+        'session_id' => session_id(),
+    ]);
+}
+
 return [
     'config' => $config,
     'logger' => $logger,
