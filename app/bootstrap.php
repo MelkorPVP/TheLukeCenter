@@ -28,11 +28,6 @@ $logger = new AppLogger(
     $environment
 );
 
-$override = app_logging_override($config, function () use ($config, $logger) {
-    return site_content_values($config, $logger);
-});
-$logger->setEnabled($override);
-
 // Log the request bootstrap step so we can trace from init through completion.
 if ($logger->isEnabled()) {
     $logger->info('Request bootstrap complete', [

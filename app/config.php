@@ -35,6 +35,13 @@ function app_read_env(string $key, string $fallback = ''): string
     return (string) $value;
 }
 
+function app_is_logging_enabled(): bool
+{
+    $raw = strtoupper(trim(app_read_env('ENABLE_APPLICATION_LOGGING')));
+
+    return $raw === 'TRUE';
+}
+
 function app_email_list(string $raw): array
 {
     $parts = array_map('trim', explode(',', $raw));
@@ -97,10 +104,7 @@ function app_base_configuration(): array
             APP_ENV_TEST => ['recipients' => app_email_list(app_read_env('EMAIL_RECIPIENTS_TEST', 'contact@thelukecenter.org'))],
         ],
         'logging' => [
-            'default' => [
-                APP_ENV_PROD => false,
-                APP_ENV_TEST => true,
-            ],
+            'enabled' => app_is_logging_enabled(),
             'file' => dirname(__DIR__) . '/storage/logs/application.log',
         ],
     ];
@@ -116,29 +120,9 @@ function app_build_configuration(string $environment): array
         'google' => array_merge($base['google'], $sheetSet),
         'email' => $base['email'][$environment] ?? ['recipients' => ['contact@thelukecenter.org']],
         'logging' => [
-            'enabled' => (bool) ($base['logging']['default'][$environment] ?? false),
+            'enabled' => (bool) ($base['logging']['enabled'] ?? false),
             'file' => $base['logging']['file'],
         ],
     ];
-}
-
-function app_logging_override(array $config, ?callable $contentResolver = null): bool
-{
-    $default = (bool) ($config['logging']['enabled'] ?? false);
-    if ($contentResolver === null) {
-        return $default;
-    }
-
-    try {
-        $values = $contentResolver();
-        $raw = strtoupper(trim((string) ($values['logging_enabled'] ?? '')));
-        if ($raw === '') {
-            return $default;
-        }
-
-        return in_array($raw, ['1', 'TRUE', 'YES', 'ON', 'ENABLED'], true);
-    } catch (Throwable $e) {
-        return $default;
-    }
 }
 
