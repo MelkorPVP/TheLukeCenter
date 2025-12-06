@@ -16,6 +16,7 @@ try {
     site_content_save_cache($config, $payload, $logger);
 
     $summary = [
+        'environment' => $config['environment'] ?? '',
         'values_count' => count($payload['values'] ?? []),
         'testimonials_count' => count($payload['testimonials'] ?? []),
         'images_count' => count($payload['images'] ?? []),

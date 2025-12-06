@@ -7,6 +7,15 @@ const APP_ENV_TEST = 'test';
 
 function app_detect_environment(): string
 {
+    // Allow explicit environment selection for CLI contexts (e.g., cron) via env vars.
+    $envOverride = getenv('APP_ENV') ?: getenv('APP_ENVIRONMENT');
+    if (is_string($envOverride) && $envOverride !== '') {
+        $normalized = strtolower(trim($envOverride));
+        if ($normalized === APP_ENV_TEST || $normalized === APP_ENV_PROD) {
+            return $normalized;
+        }
+    }
+
     $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
     if (strpos($host, 'test.thelukecenter.org') !== false) {
         return APP_ENV_TEST;
@@ -35,8 +44,12 @@ function app_email_list(string $raw): array
 
 function app_base_configuration(): array
 {
+    // Prefer environment-specific variables but fall back to generic names when provided.
     $prodSheets = [
-        'site_values_spreadsheet_id' => app_read_env('GOOGLE_SITE_VALUES_SHEET_ID_PROD'),
+        'site_values_spreadsheet_id' => app_read_env(
+            'GOOGLE_SITE_VALUES_SHEET_ID_PROD',
+            app_read_env('GOOGLE_SITE_VALUES_SHEET_ID')
+        ),
         'site_values_range' => app_read_env('GOOGLE_SITE_VALUES_RANGE', 'Values!A:B'),
         'contact_spreadsheet_id' => app_read_env('GOOGLE_CONTACT_SHEET_ID_PROD'),
         'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB', 'Submissions'),
@@ -49,7 +62,10 @@ function app_base_configuration(): array
     ];
 
     $testSheets = [
-        'site_values_spreadsheet_id' => app_read_env('GOOGLE_SITE_VALUES_SHEET_ID_TEST', $prodSheets['site_values_spreadsheet_id']),
+        'site_values_spreadsheet_id' => app_read_env(
+            'GOOGLE_SITE_VALUES_SHEET_ID_TEST',
+            $prodSheets['site_values_spreadsheet_id']
+        ),
         'site_values_range' => app_read_env('GOOGLE_SITE_VALUES_RANGE_TEST', $prodSheets['site_values_range']),
         'contact_spreadsheet_id' => app_read_env('GOOGLE_CONTACT_SHEET_ID_TEST', $prodSheets['contact_spreadsheet_id']),
         'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB_TEST', $prodSheets['contact_sheet_tab']),
