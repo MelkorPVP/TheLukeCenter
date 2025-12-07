@@ -37,57 +37,67 @@
     // 4. Pre-flight Debug: Check Token Accessibility
     // This will print a clear error to your log if the file is physically unreadable
     $tokenPath = '/home1/bnrortmy/tokenStorage/google-api-oauth-token.json';
-    if (!file_exists($tokenPath)) {
-        fwrite(STDERR, "CRITICAL DEBUG: Token file not found at: $tokenPath\n");
-        fwrite(STDERR, "Current Working Dir: " . getcwd() . "\n");
-        } elseif (!is_readable($tokenPath)) {
-        fwrite(STDERR, "CRITICAL DEBUG: Token file exists but is NOT readable. Check permissions.\n");
-    }
     // --- END: Cron Environment Fixer ---
-    
-    
+
+
     $bootstrap = require __DIR__ . '/../bootstrap.php';
-    
+
     // Preserve the shared logging config, but rebuild per-environment configs
     $loggingConfig = $bootstrap['config']['logging'] ?? [];
-    
+    $sharedWriter = app_logger_file_writer($loggingConfig['file'] ?? (APP_ROOT . '/storage/logs/application.log'));
+    $bootstrapLogger = app_logger_from_config($loggingConfig, APP_ENVIRONMENT, $sharedWriter);
+
+    if ($bootstrapLogger->isEnabled())
+    {
+        if (!file_exists($tokenPath)) {
+            $bootstrapLogger->error('Token file not found for cron warmup', [
+                'token_path' => $tokenPath,
+                'cwd' => getcwd(),
+            ]);
+        } elseif (!is_readable($tokenPath)) {
+            $bootstrapLogger->error('Token file not readable for cron warmup', [
+                'token_path' => $tokenPath,
+            ]);
+        } else {
+            $bootstrapLogger->info('Token file available for cron warmup', [
+                'token_path' => $tokenPath,
+            ]);
+        }
+    }
+
     $exitCode = 0;
     $environments = [APP_ENV_PROD, APP_ENV_TEST];
-    
+
     foreach ($environments as $environment)
     {
         $envConfig = app_build_configuration($environment);
-        $envLogger = new AppLogger(
-        (bool) ($loggingConfig['enabled'] ?? false),
-        $loggingConfig['file'] ?? (APP_ROOT . '/storage/logs/application.log'),
-        $environment
-        );
-        
+        $envLogger = app_logger_from_config($loggingConfig, $environment, $sharedWriter);
+
         try
         {
+            $envLogger->info('Starting content cache warmup', [
+                'environment' => $environment,
+            ]);
+
             $payload = site_content_fetch_payload($envConfig, $envLogger);
             site_content_save_cache($envConfig, $payload, $envLogger);
-            
+
             $valuesCount = is_array($payload['values'] ?? null) ? count($payload['values']) : 0;
             $testimonialsCount = is_array($payload['testimonials'] ?? null) ? count($payload['testimonials']) : 0;
             $imagesCount = is_array($payload['images'] ?? null) ? count($payload['images']) : 0;
-            
+
             $generatedAtRaw = $payload['generated_at'] ?? null;
             $generatedAt = is_numeric($generatedAtRaw)
             ? date('c', (int) $generatedAtRaw)
             : (string) ($generatedAtRaw ?? '');
-            
-            fwrite(
-            STDOUT,
-            sprintf(
-            "Content cache ready for %s (values: %d, testimonials: %d, images: %d, generated_at: %s)\n",
-            $environment,
-            $valuesCount,
-            $testimonialsCount,
-            $imagesCount,
-            $generatedAt
-            )
-            );
+
+            $envLogger->info('Content cache ready', [
+                'environment' => $environment,
+                'values_count' => $valuesCount,
+                'testimonials_count' => $testimonialsCount,
+                'images_count' => $imagesCount,
+                'generated_at' => $generatedAt,
+            ]);
         }
         catch (Throwable $e)
         {
@@ -103,18 +113,9 @@
                 'trace' => $e->getTraceAsString(),
                 ]);
             }
-            
-            fwrite(
-            STDERR,
-            sprintf(
-            "Error warming content cache for %s: %s\n",
-            $environment,
-            $e->getMessage()
-            )
-            );
-            
+
             $exitCode = 1;
         }
     }
-    
+
 exit($exitCode);

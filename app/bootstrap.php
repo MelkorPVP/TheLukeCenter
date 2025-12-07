@@ -23,10 +23,11 @@ if (!defined('APP_ENVIRONMENT')) {
 }
 
 $config = app_build_configuration($environment);
-$logger = new AppLogger(
-    (bool) ($config['logging']['enabled'] ?? false),
-    $config['logging']['file'] ?? (APP_ROOT . '/storage/logs/application.log'),
-    $environment
+$loggerWriter = app_logger_file_writer($config['logging']['file'] ?? (APP_ROOT . '/storage/logs/application.log'));
+$logger = app_logger_from_config(
+    $config['logging'] ?? [],
+    $environment,
+    $loggerWriter
 );
 
 // Log the request bootstrap step so we can trace from init through completion.
