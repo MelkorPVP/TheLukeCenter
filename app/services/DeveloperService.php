@@ -127,11 +127,11 @@ function developer_current_env_flags(): array
  */
 function developer_copy_overlay(string $sourceEnv, string $destinationEnv, ?AppLogger $logger = null): array
 {
-    $sourceDir = app_public_overlay_dir($sourceEnv);
-    $destinationDir = app_public_overlay_dir($destinationEnv);
+    $sourceDir = app_public_root($sourceEnv);
+    $destinationDir = app_public_root($destinationEnv);
 
     if (!is_dir($sourceDir)) {
-        throw new RuntimeException(sprintf('Source overlay %s is missing', $sourceDir));
+        throw new RuntimeException(sprintf('Source site root %s is missing', $sourceDir));
     }
 
     if (!is_dir($destinationDir)) {
@@ -168,9 +168,11 @@ function developer_copy_overlay(string $sourceEnv, string $destinationEnv, ?AppL
     }
 
     if ($logger instanceof AppLogger && $logger->isEnabled()) {
-        $logger->info('Overlay sync completed', [
+        $logger->info('Site sync completed', [
             'source' => $sourceEnv,
             'destination' => $destinationEnv,
+            'source_root' => $sourceDir,
+            'destination_root' => $destinationDir,
             'files' => $files,
         ]);
     }

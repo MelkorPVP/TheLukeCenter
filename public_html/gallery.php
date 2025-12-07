@@ -1,7 +1,3 @@
 <?php
-
-declare(strict_types=1);
-
-require __DIR__ . '/env-loader.php';
-
-app_require_public(basename(__FILE__));
+    http_response_code(404);
+    echo 'Gallery is only available in the TEST environment.';

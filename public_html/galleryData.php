@@ -1,7 +1,4 @@
 <?php
-
-declare(strict_types=1);
-
-require __DIR__ . '/env-loader.php';
-
-app_require_public(basename(__FILE__));
+    http_response_code(404);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Gallery data is only available in the TEST environment.']);

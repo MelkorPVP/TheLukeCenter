@@ -5,19 +5,16 @@ declare(strict_types=1);
 const APP_ENV_PROD = 'prod';
 const APP_ENV_TEST = 'test';
 
-function app_public_root(): string
+function app_public_root(?string $environment = null): string
 {
-    return dirname(__DIR__) . '/public_html';
-}
+    $environment = $environment ?? app_detect_environment();
+    $root = dirname(__DIR__);
 
-function app_public_shared_dir(): string
-{
-    return app_public_root() . '/shared';
-}
+    if ($environment === APP_ENV_TEST) {
+        return $root . '/test.thelukecenter.org';
+    }
 
-function app_public_overlay_dir(string $environment): string
-{
-    return app_public_root() . '/' . $environment;
+    return $root . '/public_html';
 }
 
 function app_public_path(string $file, ?string $environment = null): string
@@ -25,22 +22,17 @@ function app_public_path(string $file, ?string $environment = null): string
     $environment = $environment ?? app_detect_environment();
     $relative = ltrim($file, '/');
 
-    $overlayPath = app_public_overlay_dir($environment) . '/' . $relative;
-    if (is_file($overlayPath)) {
-        return $overlayPath;
+    $resolved = app_public_root($environment) . '/' . $relative;
+    if (is_file($resolved)) {
+        return $resolved;
     }
 
-    $sharedPath = app_public_shared_dir() . '/' . $relative;
-    if (is_file($sharedPath)) {
-        return $sharedPath;
-    }
-
-    throw new RuntimeException(sprintf('Public asset %s not found in %s or shared overlay', $relative, $environment));
+    throw new RuntimeException(sprintf('Public asset %s not found in %s root', $relative, $environment));
 }
 
-function app_htaccess_path(): string
+function app_htaccess_path(?string $environment = null): string
 {
-    return app_public_root() . '/.htaccess';
+    return app_public_root($environment) . '/.htaccess';
 }
 
 /**

@@ -139,7 +139,7 @@
                 <div class="card h-100">
                     <div class="card-body">
                         <h2 class="h4">Environment File Sync</h2>
-                        <p class="mb-3">Sync overlay files between TEST (<?= htmlspecialchars(app_public_overlay_dir(APP_ENV_TEST), ENT_QUOTES) ?>) and PROD (<?= htmlspecialchars(app_public_overlay_dir(APP_ENV_PROD), ENT_QUOTES) ?>).</p>
+                        <p class="mb-3">Sync site files between TEST (<?= htmlspecialchars(app_public_root(APP_ENV_TEST), ENT_QUOTES) ?>) and PROD (<?= htmlspecialchars(app_public_root(APP_ENV_PROD), ENT_QUOTES) ?>).</p>
 
                         <form method="post" class="d-grid d-sm-flex gap-2 mb-3">
                             <input type="hidden" name="action" value="promote_test_to_prod">
