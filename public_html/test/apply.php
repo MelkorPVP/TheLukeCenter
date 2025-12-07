@@ -1,5 +1,5 @@
 <?php
-    $container = require __DIR__ . '/../app/bootstrap.php';
+    $container = require dirname(__DIR__, 2) . '/app/bootstrap.php';
     $config = $container['config'];
     $logger = $container['logger'];
 
@@ -23,7 +23,7 @@
     $alertClass = $hasMessage ? ($messageType === 'success' ? 'alert-success' : 'alert-danger') : 'd-none';
     
     // Insert HTML header.
-    require __DIR__ . '/header.php';
+    require app_public_path('header.php', APP_ENVIRONMENT);
 ?>
 <section class="hero text-center text-hero border-bottom">
     <div class="container py-4">
@@ -90,7 +90,7 @@
                                 <option value="" selected disabled>Select...</option>
                                 <?php
                                     // Insert States.
-                                    require __DIR__ . '/states.php';
+                                    require app_public_path('states.php', APP_ENVIRONMENT);
                                 ?>
                             </select>                            
                         </div>
@@ -194,5 +194,5 @@
 </section>
 <?php
     // Insert HTML footer.
-    require __DIR__ . '/footer.php'; 
+    require app_public_path('footer.php', APP_ENVIRONMENT);
 ?>
