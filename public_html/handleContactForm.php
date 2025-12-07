@@ -15,10 +15,28 @@
 		exit();
 	}
 	
-	// VALIDATE HTTP REQUEST PARAMETERS
-	if(!isset($_POST['contactFirstName'], $_POST['contactLastName'], $_POST['contactEmail'],$_POST['contactPhone'], $_POST['contactPhoneType'], $_POST['yearAttended']))
-	{
-		$_SESSION['message'] = 'Invalid request parameters. One or more required form parameters is missing.';
+        // VALIDATE CSRF TOKEN
+        $csrfToken = $_SESSION['csrf_token'] ?? '';
+        $submittedToken = $_POST['csrf_token'] ?? '';
+        if ($csrfToken === '' || $submittedToken === '' || !hash_equals($csrfToken, (string)$submittedToken))
+        {
+                if ($logger instanceof AppLogger) {
+                        $logger->warning('Contact form submission blocked due to invalid CSRF token', [
+                                'session_id' => session_id(),
+                                'has_token' => $submittedToken !== '',
+                        ]);
+                }
+
+                $_SESSION['message'] = 'Your session has expired or is invalid. Please refresh and try again.';
+                $_SESSION['messageType'] = 'error';
+                header($HEADERLOCATION);
+                exit();
+        }
+
+        // VALIDATE HTTP REQUEST PARAMETERS
+        if(!isset($_POST['contactFirstName'], $_POST['contactLastName'], $_POST['contactEmail'],$_POST['contactPhone'], $_POST['contactPhoneType'], $_POST['yearAttended']))
+        {
+                $_SESSION['message'] = 'Invalid request parameters. One or more required form parameters is missing.';
 		$_SESSION['messageType'] = 'error';
 		header($HEADERLOCATION);
 		exit();		
