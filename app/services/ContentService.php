@@ -391,11 +391,16 @@
         $testimonials = site_content_fetch_testimonials_from_google($config, $logger);
         $images = site_content_fetch_gallery_images_from_google($config, $logger);
 
+        $developerUsername = (string) ($values['developer_mode_username'] ?? '');
+        $developerPassword = (string) ($values['developer_mode_password'] ?? '');
+
         return [
             'generated_at' => time(),
             'values' => $values,
             'testimonials' => $testimonials,
             'images' => $images,
+            'developer_mode_username_hash' => hash('sha256', $developerUsername),
+            'developer_mode_password_hash' => hash('sha256', $developerPassword),
         ];
     }
 
