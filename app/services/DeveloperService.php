@@ -73,7 +73,14 @@ function developer_fetch_sheet_credentials(array $config, ?AppLogger $logger = n
         $mapped[$key] = trim((string) $row[1]);
     }
 
-    return $mapped;
+    $credentials = [];
+    foreach (['developer_mode_username', 'developer_mode_password'] as $credentialKey) {
+        if (array_key_exists($credentialKey, $mapped)) {
+            $credentials[$credentialKey] = $mapped[$credentialKey];
+        }
+    }
+
+    return $credentials;
 }
 
 /**
@@ -83,16 +90,17 @@ function developer_validate_credentials(array $config, string $username, string 
 {
     // Pull credentials from the Google Sheet so operators can rotate them without code changes.
     $credentials = developer_fetch_sheet_credentials($config, $logger);
-    $expectedUser = $credentials['DeveloperModeUsername'] ?? '';
-    $expectedPassword = $credentials['DeveloperModePassword'] ?? '';
+    $expectedUser = $credentials['developer_mode_username'] ?? '';
+    $expectedPasswordHash = $credentials['developer_mode_password'] ?? '';
 
-    if ($expectedUser === '' || $expectedPassword === '') {
+    if ($expectedUser === '' || $expectedPasswordHash === '') {
         throw new RuntimeException('Developer credentials are missing in the sheet.');
     }
 
+    // Stored passwords are expected to be pre-hashed in the sheet using the developer_hash_password scheme.
     $suppliedHash = developer_hash_password($password);
 
-    return hash_equals($expectedUser, $username) && hash_equals($expectedPassword, $suppliedHash);
+    return hash_equals($expectedUser, $username) && hash_equals($expectedPasswordHash, $suppliedHash);
 }
 
 function developer_start_session(string $username): void
