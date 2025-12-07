@@ -1,24 +1,63 @@
-// --- Navbar: active state ---
-function initializeNav() 
+function createClientLogger(options = {})
 {
-	const normalizePathname = (path) => path.replace(/\/$/, '') || '/index.php';
-	const currentPathname   = normalizePathname(location.pathname);
-	const navLinkNodeList = document.querySelectorAll('#primaryNav .nav-link');
-	
-	navLinkNodeList.forEach((navLinkElement) => 
-	{
-		const linkHref = navLinkElement.getAttribute('href') || '';
-		
-		// Skip non-page links
-		if (linkHref.startsWith('mailto:') || linkHref.startsWith('tel:') || linkHref.startsWith('#')) return;
-		
-		const targetPathname = normalizePathname(new URL(linkHref, location.origin).pathname);
-		if (targetPathname === currentPathname) 
-		{
-			navLinkElement.classList.add('active');
-			navLinkElement.setAttribute('aria-current', 'page');
-		}
-	});
+    const enabled = Boolean(options.enabled);
+    const environment = (options.environment || '').toUpperCase();
+    const requestId = options.requestId || 'browser';
+
+    const prefix = [
+        environment ? `[${environment}]` : '',
+        requestId ? `[RID:${requestId}]` : '',
+    ].filter(Boolean).join(' ');
+
+    const emit = (consoleMethod, level, message, meta = {}) =>
+    {
+        if (!enabled) return;
+
+        const payload = Object.keys(meta).length ? meta : undefined;
+        const args = [prefix, `[${level}]`, message];
+
+        if (payload) {
+            args.push(payload);
+        }
+
+        (console[consoleMethod] || console.log).apply(console, args);
+    };
+
+    return {
+        info: (message, meta) => emit('info', 'INFO', message, meta),
+        warn: (message, meta) => emit('warn', 'WARN', message, meta),
+        error: (message, meta) => emit('error', 'ERROR', message, meta),
+    };
+}
+
+const appLogger = createClientLogger({
+    enabled: document.body?.dataset.loggingEnabled === 'true' || Boolean((window.APP_CONTEXT || {}).loggingEnabled),
+    environment: document.body?.dataset.appEnvironment || (window.APP_CONTEXT || {}).environment,
+    requestId: document.body?.dataset.requestId || (window.APP_CONTEXT || {}).requestId,
+});
+
+// --- Navbar: active state ---
+function initializeNav()
+{
+        const normalizePathname = (path) => path.replace(/\/$/, '') || '/index.php';
+        const currentPathname   = normalizePathname(location.pathname);
+        const navLinkNodeList = document.querySelectorAll('#primaryNav .nav-link');
+
+        navLinkNodeList.forEach((navLinkElement) =>
+        {
+                const linkHref = navLinkElement.getAttribute('href') || '';
+
+                // Skip non-page links
+                if (linkHref.startsWith('mailto:') || linkHref.startsWith('tel:') || linkHref.startsWith('#')) return;
+
+                const targetPathname = normalizePathname(new URL(linkHref, location.origin).pathname);
+                if (targetPathname === currentPathname)
+                {
+                        navLinkElement.classList.add('active');
+                        navLinkElement.setAttribute('aria-current', 'page');
+                        appLogger.info('Activated navigation link', { href: linkHref });
+                }
+        });
 }
 
 // --- Form: run native HTML5 validation + scroll to errors ---
@@ -70,6 +109,11 @@ function initializeForm(formId, statusId)
             // Form is invalid: find the first invalid field
             const firstInvalid = formElement.querySelector(':invalid');
             if (!firstInvalid) return;
+
+            appLogger.warn('Form validation failed', {
+                formId,
+                field: firstInvalid.getAttribute('id') || firstInvalid.getAttribute('name') || 'unknown',
+            });
 
             // Use a higher-level container for better scroll positioning
             const container = firstInvalid.closest('.col-md-6, .col-12, .form-group') || firstInvalid;
@@ -155,12 +199,14 @@ function initializeDeveloperLogin()
 
                 if (response.ok && result.success) {
                     showStatus('Login successful. Redirecting…', true);
+                    appLogger.info('Developer login successful');
                     setTimeout(() => { window.location.href = '/developer.php'; }, 400);
                 } else {
                     showStatus(result.error || 'Login failed.', false);
+                    appLogger.warn('Developer login failed', { message: result.error || 'Login failed' });
                 }
             } catch (error) {
-                console.error(error);
+                appLogger.error('Unexpected developer login error', { error: String(error) });
                 showStatus('Unexpected error during login.', false);
             }
         });
@@ -240,7 +286,10 @@ function initializeDeveloperTestData()
             fillButton.type = 'button';
             fillButton.className = 'btn btn-outline-secondary';
             fillButton.textContent = 'Fill with test data';
-            fillButton.addEventListener('click', () => fillForm(formElement, values));
+            fillButton.addEventListener('click', () => {
+                fillForm(formElement, values);
+                appLogger.info('Developer test data populated', { formId });
+            });
 
             if (button.parentNode) {
                 button.parentNode.insertBefore(fillButton, button);
@@ -259,3 +308,4 @@ initializeForm('contactForm', 'contactStatus');
 initializeForm('applyForm', 'applyStatus');
 initializeDeveloperLogin();
 initializeDeveloperTestData();
+appLogger.info('Frontend bootstrap complete', { path: location.pathname });

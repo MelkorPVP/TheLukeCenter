@@ -26,3 +26,8 @@ Environment selection follows `app/config.php`:
 - Ensure the `public_html/` root (wrappers plus symlinks) is deployed along with the `shared/`, `test/`, and `prod/` overlays.
 - Keep `app/` unchanged across environments; only overlay directories should vary.
 - Set `APP_ENV=test` (or use the TEST hostname) to exercise the TEST overlays without modifying PROD files.
+
+## Logging
+
+- Server-side logging is controlled by the `ENABLE_APPLICATION_LOGGING` flag surfaced via `.htaccess`/environment variables. When enabled, both web and cron contexts append to the shared `storage/logs/application.log` path defined in `app/config.php`.
+- The generated request ID and environment tag are included in each log entry. The same toggle is also surfaced to client-side code so browser console messages can be gated alongside backend logs.

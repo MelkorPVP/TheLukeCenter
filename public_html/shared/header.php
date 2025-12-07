@@ -11,16 +11,19 @@
         $programDates = $programDates ?? site_content_program_dates($config, $logger ?? null);
         $applicationOpen = $applicationOpen ?? site_content_application_open($config, $logger ?? null);
         $developerMode = $developerMode ?? app_is_developer_mode();
+        $loggingEnabled = (bool) ($config['logging']['enabled'] ?? false);
     } else {
         $applicationOpen = $applicationOpen ?? false;
         $programName = $programName ?? '';
         $programLocation = $programLocation ?? '';
         $programDates = $programDates ?? '';
         $developerMode = $developerMode ?? false;
+        $loggingEnabled = app_is_logging_enabled();
     }
 
     $developerSession = developer_is_authenticated();
-    
+    $requestId = ($logger instanceof AppLogger) ? $logger->getRequestId() : '';
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -39,10 +42,13 @@
                 'programDates' => $programDates,
                 'developerMode' => (bool) $developerMode,
                 'developerSession' => (bool) $developerSession,
+                'loggingEnabled' => (bool) $loggingEnabled,
+                'environment' => APP_ENVIRONMENT,
+                'requestId' => $requestId,
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
         </script>
     </head>
-    <body>
+    <body data-logging-enabled="<?= $loggingEnabled ? 'true' : 'false' ?>" data-app-environment="<?= htmlspecialchars(APP_ENVIRONMENT, ENT_QUOTES) ?>" data-request-id="<?= htmlspecialchars($requestId, ENT_QUOTES) ?>">
         <header class="border-bottom bg-white site-header">
             <?php
                 // Insert Navbar.
