@@ -89,12 +89,26 @@ function developer_fetch_sheet_credentials(array $config, ?AppLogger $logger = n
 function developer_validate_credentials(array $config, string $username, string $password, ?AppLogger $logger = null): bool
 {
     // Pull credentials from the Google Sheet so operators can rotate them without code changes.
-    $credentials = developer_fetch_sheet_credentials($config, $logger);
+    try {
+        $credentials = developer_fetch_sheet_credentials($config, $logger);
+    } catch (Throwable $e) {
+        if ($logger instanceof AppLogger && $logger->isEnabled()) {
+            $logger->error('Developer credentials lookup failed', [
+                'exception' => get_class($e),
+            ]);
+        }
+
+        return false;
+    }
     $expectedUser = $credentials['developer_mode_username'] ?? '';
     $expectedPasswordHash = $credentials['developer_mode_password'] ?? '';
 
     if ($expectedUser === '' || $expectedPasswordHash === '') {
-        throw new RuntimeException('Developer credentials are missing in the sheet.');
+        if ($logger instanceof AppLogger && $logger->isEnabled()) {
+            $logger->error('Developer credentials are missing in the sheet.');
+        }
+
+        return false;
     }
 
     // Stored passwords are expected to be pre-hashed in the sheet using the developer_hash_password scheme.
