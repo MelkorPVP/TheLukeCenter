@@ -1,6 +1,12 @@
 <?php
     declare(strict_types=1);
-    
+
+    /**
+     * Commenting convention:
+     * - Docblocks summarize function intent along with key inputs/outputs.
+     * - Inline context comments precede major initialization, configuration, or external calls.
+     */
+
     require_once __DIR__ . '/Logger.php';
     
     /**
@@ -256,8 +262,9 @@
             } elseif ($method !== 'GET') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         }
-        
+
         if ($body !== null) {
+            // Encode the request body consistently and add the corresponding content type.
             if ($contentType === 'application/json') {
                 $payload = json_encode($body);
                 } else {

@@ -1,3 +1,12 @@
+/**
+ * Commenting convention:
+ * - Short docblocks document helper purposes and inputs/outputs.
+ * - Inline context comments precede major initialization, configuration, or external calls.
+ */
+
+/**
+ * Lightweight console logger that mirrors server-side structure for traceability.
+ */
 function createClientLogger(options = {})
 {
     const enabled = Boolean(options.enabled);
@@ -39,6 +48,7 @@ const appLogger = createClientLogger({
 // --- Navbar: active state ---
 function initializeNav()
 {
+        // Normalize paths before comparing to nav links so trailing slashes do not break highlighting.
         const normalizePathname = (path) => path.replace(/\/$/, '') || '/index.php';
         const currentPathname   = normalizePathname(location.pathname);
         const navLinkNodeList = document.querySelectorAll('#primaryNav .nav-link');
@@ -66,6 +76,7 @@ function initializeForm(formId, statusId)
     const formElement   = document.getElementById(formId);
     const statusElement = document.getElementById(statusId);
 
+    // Skip wiring if the expected form elements are missing on the page.
     if (!formElement || !statusElement) return;
 
     const hideStatus = () =>
@@ -189,6 +200,7 @@ function initializeDeveloperLogin()
             };
 
             try {
+                // Call the backend authenticator to validate credentials without page reloads.
                 const response = await fetch('/developer-login.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -218,6 +230,7 @@ function initializeDeveloperTestData()
     const ctx = window.APP_CONTEXT || {};
     if (!ctx.developerMode || !ctx.developerSession) return;
 
+    // Provide one-click data entry helpers to speed up QA in developer mode.
     const sampleData = {
         contactForm: {
             contactFirstName: 'Testy',

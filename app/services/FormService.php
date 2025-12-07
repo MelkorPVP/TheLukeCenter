@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * Commenting convention:
+ * - Docblocks summarize function intent along with key inputs/outputs.
+ * - Inline context comments precede major initialization, configuration, or external calls.
+ */
+
 require_once __DIR__ . '/GoogleService.php';
 require_once __DIR__ . '/Logger.php';
 
@@ -29,6 +35,7 @@ function handle_contact_submission(array $config, array $payload, ?AppLogger $lo
     }
 
     $timestamp = (new DateTimeImmutable('now'))->format('c');
+    // Persist submission to Sheets so contact records stay centralized.
     google_sheets_append_row(
         $googleConfig,
         $config['google']['contact_spreadsheet_id'] ?? '',
@@ -47,9 +54,9 @@ function handle_contact_submission(array $config, array $payload, ?AppLogger $lo
     );
 
     $recipients = $config['email']['recipients'] ?? [];
-    if (!empty($recipients)) 
+    if (!empty($recipients))
     {
-        // Add form submitor to email recipients list.
+        // Send confirmations to admins and the submitter when email routing is configured.
         array_push($recipients, $data['contactEmail']);
         
         $from = $config['google']['gmail_sender'] ?? ($recipients[0] ?? '');
@@ -110,6 +117,7 @@ function handle_application_submission(array $config, array $payload, ?AppLogger
     // // END LOGGING
 
     $timestamp = (new DateTimeImmutable('now'))->format('c');
+    // Persist submission to Sheets so application reviews have a single source of truth.
     google_sheets_append_row(
         $googleConfig,
         $config['google']['application_spreadsheet_id'] ?? '',
@@ -149,9 +157,9 @@ function handle_application_submission(array $config, array $payload, ?AppLogger
     );
 
     $recipients = $config['email']['recipients'] ?? [];
-    if (!empty($recipients)) 
+    if (!empty($recipients))
     {
-        // Add form submitor to email recipients list.
+        // Share a confirmation copy with both staff and applicant for auditability.
         array_push($recipients, $data['applicantEmail']);
         
         $from = $config['google']['gmail_sender'] ?? ($recipients[0] ?? '');
