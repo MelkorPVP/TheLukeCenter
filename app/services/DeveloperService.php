@@ -59,6 +59,18 @@ function developer_fetch_sheet_credentials(array $config, ?AppLogger $logger = n
  */
 function developer_validate_credentials(array $config, string $username, string $password, ?AppLogger $logger = null): bool
 {
+    try {
+        $payload = site_content_resolve_payload($config, $logger);
+    } catch (Throwable $e) {
+        $payload = [];
+
+        if ($logger instanceof AppLogger && $logger->isEnabled()) {
+            $logger->error('Developer credential payload lookup failed', [
+                'exception' => get_class($e),
+            ]);
+        }
+    }
+
     // Pull credentials from the Google Sheet so operators can rotate them without code changes.
     try {
         $credentials = developer_fetch_sheet_credentials($config, $logger);
@@ -82,9 +94,29 @@ function developer_validate_credentials(array $config, string $username, string 
         return false;
     }
 
-    // Hash both stored and supplied values before comparison to avoid relying on plaintext sheet entries.
-    $expectedUserHash = developer_hash_password($expectedUser);
-    $expectedPasswordHash = developer_hash_password($expectedPassword);
+    // Prefer hashed payload values, falling back to hashing plaintext sheet entries for backward compatibility.
+    $expectedUserHash = trim((string) ($payload['developer_mode_username_hash'] ?? ''));
+    $expectedPasswordHash = trim((string) ($payload['developer_mode_password_hash'] ?? ''));
+    $sheetUserHash = developer_hash_password($expectedUser);
+    $sheetPasswordHash = developer_hash_password($expectedPassword);
+
+    if (($expectedUserHash === '' || $expectedPasswordHash === '') && $logger instanceof AppLogger && $logger->isEnabled()) {
+        $logger->error('Developer credential hash missing from payload', [
+            'missing_username_hash' => $expectedUserHash === '',
+            'missing_password_hash' => $expectedPasswordHash === '',
+        ]);
+    }
+
+    if ($expectedUserHash !== '' && !hash_equals($expectedUserHash, $sheetUserHash) && $logger instanceof AppLogger && $logger->isEnabled()) {
+        $logger->error('Developer username hash mismatches plaintext value');
+    }
+
+    if ($expectedPasswordHash !== '' && !hash_equals($expectedPasswordHash, $sheetPasswordHash) && $logger instanceof AppLogger && $logger->isEnabled()) {
+        $logger->error('Developer password hash mismatches plaintext value');
+    }
+
+    $expectedUserHash = $expectedUserHash !== '' ? $expectedUserHash : $sheetUserHash;
+    $expectedPasswordHash = $expectedPasswordHash !== '' ? $expectedPasswordHash : $sheetPasswordHash;
     $suppliedUserHash = developer_hash_password($username);
     $suppliedPasswordHash = developer_hash_password($password);
 
