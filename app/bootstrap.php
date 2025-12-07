@@ -23,6 +23,14 @@ if (!defined('APP_ROOT')) {
 // Ensure all entry points share a consistent session state for logging and forms.
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
+
+    // Rotate a fresh CSRF token at the beginning of each session lifecycle.
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Ensure a CSRF token is always available for form rendering when sessions were started elsewhere.
+if (!isset($_SESSION['csrf_token']) || $_SESSION['csrf_token'] === '') {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 // Detect the runtime environment before constructing configuration or loggers.

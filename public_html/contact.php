@@ -14,7 +14,8 @@
         header('Expires: 0');
     }
     
-    // Prepair message(s)
+    // Prepare CSRF token and message(s)
+    $csrfToken = $_SESSION['csrf_token'] ?? '';
     $message = $_SESSION['message'] ?? '';
     $messageType = $_SESSION['messageType'] ?? ''; // 'success' | 'error'
     unset($_SESSION['message'], $_SESSION['messageType']); // one-time
@@ -38,6 +39,7 @@
                 <p class="mb-4">Alumni and friends of The Luke Center, please share your current contact details so we can keep you informed about upcoming gatherings, volunteer opportunities, and Pacific Program updates.</p>
                 <form id="contactForm" class="needs-validation" action="handleContactForm.php" method="post">
                     <input type="text" class="d-none" tabindex="-1" autocomplete="off" data-honeypot>
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label" for="contactFirstName">First Name *</label>
