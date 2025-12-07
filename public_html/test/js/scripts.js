@@ -308,8 +308,171 @@ function initializeGallery()
 
 
 
+function initializeDeveloperLogin()
+{
+        const trigger = document.querySelector('[data-developer-login]');
+        const modalElement = document.getElementById('developerLoginModal');
+
+        if (!trigger || !modalElement || !window.bootstrap) return;
+
+        const loginForm = modalElement.querySelector('[data-developer-login-form]');
+        const statusBox = modalElement.querySelector('[data-login-status]');
+        const modal = new window.bootstrap.Modal(modalElement);
+
+        const resetStatus = () =>
+        {
+                if (!statusBox) return;
+                statusBox.textContent = '';
+                statusBox.classList.add('d-none');
+                statusBox.classList.remove('alert-success', 'alert-danger');
+        };
+
+        const showStatus = (message, isSuccess) =>
+        {
+                if (!statusBox) return;
+                statusBox.textContent = message;
+                statusBox.classList.remove('d-none');
+                statusBox.classList.toggle('alert-success', isSuccess);
+                statusBox.classList.toggle('alert-danger', !isSuccess);
+        };
+
+        trigger.addEventListener('click', (event) =>
+        {
+                event.preventDefault();
+                resetStatus();
+                modal.show();
+        });
+
+        if (loginForm)
+        {
+                loginForm.addEventListener('submit', async (event) =>
+                {
+                        event.preventDefault();
+                        resetStatus();
+
+                        const formData = new FormData(loginForm);
+                        const payload = {
+                                username: formData.get('username') || '',
+                                password: formData.get('password') || '',
+                        };
+
+                        try {
+                                const response = await fetch('/developer-login.php', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(payload),
+                                });
+
+                                const result = await response.json();
+
+                                if (response.ok && result.success)
+                                {
+                                        showStatus('Login successful. Redirecting…', true);
+                                        setTimeout(() => { window.location.href = '/developer.php'; }, 400);
+                                }
+                                else
+                                {
+                                        showStatus(result.error || 'Login failed.', false);
+                                }
+                        } catch (error) {
+                                console.error(error);
+                                showStatus('Unexpected error during login.', false);
+                        }
+                });
+        }
+}
+
+function initializeDeveloperTestData()
+{
+        const ctx = window.APP_CONTEXT || {};
+        if (!ctx.developerMode || !ctx.developerSession) return;
+
+        const sampleData = {
+                contactForm: {
+                        contactFirstName: 'Testy',
+                        contactLastName: 'McTester',
+                        contactEmail: 'tester@example.com',
+                        contactPhone: '555-0100',
+                        contactPhoneType: 'Mobile',
+                        currentOrganization: 'Test Org',
+                        yearAttended: '2024',
+                },
+                applyForm: {
+                        applicantFirstName: 'Alex',
+                        applicantLastName: 'Developer',
+                        applicantPreferredName: 'Alex',
+                        applicantPronouns: 'they/them',
+                        applicantEmail: 'alex.developer@example.com',
+                        applicantPhone: '555-0101',
+                        applicantPhoneType: 'Mobile',
+                        addressOne: '123 Test Lane',
+                        addressTwo: 'Suite 100',
+                        city: 'Testville',
+                        state: 'CA',
+                        zipCode: '90001',
+                        vegan: 'No',
+                        vegetarian: 'Yes',
+                        dietaryRestrictions: 'Peanuts',
+                        accessibilityNeeds: 'None',
+                        applicantOrganiaztion: 'Luke Center QA',
+                        currentTitle: 'Engineer',
+                        sponsorName: 'Pat Manager',
+                        sponsorEmail: 'pat.manager@example.com',
+                        sponsorPhone: '555-0102',
+                        questionOne: 'From colleagues.',
+                        questionTwo: 'Lead teams across regions.',
+                        questionThree: 'Partnered with public/private orgs.',
+                        questionFour: 'Improving onboarding.',
+                        questionFive: 'Expand leadership toolkit.',
+                        scholarshipQuestion: 'No',
+                        scholarshipAmount: '0',
+                },
+        };
+
+        const fillForm = (formElement, values) =>
+        {
+                Object.entries(values).forEach(([id, value]) =>
+                {
+                        const field = formElement.querySelector('#' + id);
+                        if (!field) return;
+
+                        if (field.tagName === 'SELECT') {
+                                field.value = value;
+                        } else if (field.tagName === 'TEXTAREA' || field.tagName === 'INPUT') {
+                                field.value = value;
+                        }
+                });
+        };
+
+        Object.entries(sampleData).forEach(([formId, values]) =>
+        {
+                const formElement = document.getElementById(formId);
+                if (!formElement) return;
+
+                const submitButtons = formElement.querySelectorAll('button[type="submit"], input[type="submit"]');
+
+                submitButtons.forEach((button) =>
+                {
+                        if (button.dataset.testFillAttached === 'true') return;
+
+                        const fillButton = document.createElement('button');
+                        fillButton.type = 'button';
+                        fillButton.className = 'btn btn-outline-secondary';
+                        fillButton.textContent = 'Fill with test data';
+                        fillButton.addEventListener('click', () => fillForm(formElement, values));
+
+                        if (button.parentNode) {
+                                button.parentNode.insertBefore(fillButton, button);
+                        }
+                        button.dataset.testFillAttached = 'true';
+                });
+        });
+}
+
 // Run immediately because <script> is deferred
 initializeNav();
 initializeForm('contactForm', 'contactStatus');
 initializeForm('applyForm', 'applyStatus');
 initializeGallery();
+initializeDeveloperLogin();
+initializeDeveloperTestData();

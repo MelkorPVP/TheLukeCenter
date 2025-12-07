@@ -7,6 +7,7 @@ require_once __DIR__ . '/services/Logger.php';
 require_once __DIR__ . '/services/GoogleService.php';
 require_once __DIR__ . '/services/ContentService.php';
 require_once __DIR__ . '/services/FormService.php';
+require_once __DIR__ . '/services/DeveloperService.php';
 
 if (!defined('APP_ROOT')) {
     define('APP_ROOT', dirname(__DIR__));
