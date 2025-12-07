@@ -1,3 +1,0 @@
-# Managed application flags
-SetEnv DEVELOPER_MODE false
-SetEnv ENABLE_APPLICATION_LOGGING false
