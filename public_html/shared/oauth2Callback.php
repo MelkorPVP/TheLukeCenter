@@ -2,7 +2,7 @@
 
         declare(strict_types=1);
 
-        $container = require __DIR__ . '/../app/bootstrap.php';
+        $container = require dirname(__DIR__, 2) . '/app/bootstrap.php';
         $googleConfig = $container['config']['google'] ?? [];
         $logger = $container['logger'] ?? null;
 

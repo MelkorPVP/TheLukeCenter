@@ -5,6 +5,39 @@ declare(strict_types=1);
 const APP_ENV_PROD = 'prod';
 const APP_ENV_TEST = 'test';
 
+function app_public_root(): string
+{
+    return dirname(__DIR__) . '/public_html';
+}
+
+function app_public_shared_dir(): string
+{
+    return app_public_root() . '/shared';
+}
+
+function app_public_overlay_dir(string $environment): string
+{
+    return app_public_root() . '/' . $environment;
+}
+
+function app_public_path(string $file, ?string $environment = null): string
+{
+    $environment = $environment ?? app_detect_environment();
+    $relative = ltrim($file, '/');
+
+    $overlayPath = app_public_overlay_dir($environment) . '/' . $relative;
+    if (is_file($overlayPath)) {
+        return $overlayPath;
+    }
+
+    $sharedPath = app_public_shared_dir() . '/' . $relative;
+    if (is_file($sharedPath)) {
+        return $sharedPath;
+    }
+
+    throw new RuntimeException(sprintf('Public asset %s not found in %s or shared overlay', $relative, $environment));
+}
+
 function app_detect_environment(): string
 {
     // Allow explicit environment selection via env vars.

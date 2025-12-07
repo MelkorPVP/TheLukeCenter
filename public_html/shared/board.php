@@ -1,5 +1,5 @@
 <?php
-    $container = require __DIR__ . '/../app/bootstrap.php';
+    $container = require dirname(__DIR__, 2) . '/app/bootstrap.php';
     $config = $container['config'];
     $logger = $container['logger'];
 
@@ -13,7 +13,7 @@
     $activeNav = 'board';
 
     // Insert HTML header.
-    require __DIR__ . '/header.php';
+    require app_public_path('header.php', APP_ENVIRONMENT);
 ?>
 <section class="hero text-center text-hero border-bottom">
     <div class="container py-4">
@@ -155,7 +155,7 @@
                     <?php endforeach; ?>
                     <?php 
                         // Insert HTML lower main section.
-                        require __DIR__ . '/lowerMainSection.php';                 
+                        require app_public_path('lowerMainSection.php', APP_ENVIRONMENT);
                     ?> 
                 </div>
             </div>       
@@ -163,5 +163,5 @@
     </section>
     <?php
         // Insert HTML footer.
-        require __DIR__ . '/footer.php'; 
+        require app_public_path('footer.php', APP_ENVIRONMENT);
     ?>

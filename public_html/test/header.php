@@ -47,7 +47,7 @@
         <header class="border-bottom bg-white site-header">
             <?php
                 // Insert Navbar.
-                require __DIR__ . '/navbar.php'; 
+                require app_public_path('navbar.php', APP_ENVIRONMENT);
             ?>
         </header>
         <main>
