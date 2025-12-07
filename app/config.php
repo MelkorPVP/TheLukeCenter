@@ -32,7 +32,19 @@ function app_public_path(string $file, ?string $environment = null): string
 
 function app_htaccess_path(?string $environment = null): string
 {
-    return app_public_root($environment) . '/.htaccess';
+    $environment = $environment ?? app_detect_environment();
+
+    $envSpecific = getenv('APP_HTACCESS_PATH_' . strtoupper($environment));
+    if (is_string($envSpecific) && $envSpecific !== '') {
+        return $envSpecific;
+    }
+
+    $override = getenv('APP_HTACCESS_PATH');
+    if (is_string($override) && $override !== '') {
+        return $override;
+    }
+
+    return dirname(app_public_root($environment)) . '/.htaccess';
 }
 
 /**
