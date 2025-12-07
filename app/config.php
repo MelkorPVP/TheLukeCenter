@@ -230,7 +230,7 @@ function app_base_configuration(): array
                 'https://www.googleapis.com/auth/drive.readonly',
             ],
             'gmail_sender' => $gmailSender,
-            'token_base_dir' => '/home3/bnrortmy',
+            'token_base_dir' => '/home1/bnrortmy',
             'token_subdir' => 'tokenStorage',
         ],
         'sheets' => [

@@ -37,11 +37,12 @@ if (file_exists($htaccessPath)) {
     }
 }
 
-// Pre-flight check ensures the token file is reachable before contacting Google.
-$tokenPath = '/home1/bnrortmy/tokenStorage/google-api-oauth-token.json';
 // --- END: Cron Environment Fixer ---
 
 $bootstrap = require __DIR__ . '/../bootstrap.php';
+
+// Pre-flight check ensures the token file is reachable before contacting Google.
+$tokenPath = google_get_token_path($bootstrap['config']['google'] ?? []);
 
 // Preserve the shared logging config, but rebuild per-environment configs.
 $loggingConfig = $bootstrap['config']['logging'] ?? [];
