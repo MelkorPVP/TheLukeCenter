@@ -1,5 +1,5 @@
 <?php
-    $container = require dirname(__DIR__, 2) . '/app/bootstrap.php';
+    $container = require dirname(__DIR__) . '/app/bootstrap.php';
     $config = $container['config'];
     $logger = $container['logger'];
 
