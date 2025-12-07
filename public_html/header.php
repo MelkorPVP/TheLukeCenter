@@ -33,7 +33,14 @@
         <title><?= htmlspecialchars($pageTitle, ENT_QUOTES) ?></title>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-        <link rel="stylesheet" href="/css/styles.css">                <link rel="icon" href="/images/favicons/favicon.ico">                <link rel="icon" href="/images/favicons/android-chrome-192x192.png">                <link rel="icon" href="/images/favicons/android-chrome-512x512.png">                <link rel="apple-touch-icon" href="/images/favicons/apple-touch-icon.png">                <link rel="icon" href="/images/favicons/favicon-16x16.png">                <link rel="icon" href="/images/favicons/favicon-32x32.png">                <link rel="manifest" href="/site.webmanifest">
+        <link rel="stylesheet" href="/css/styles.css">
+        <link rel="icon" href="/images/favicons/favicon.ico">
+        <link rel="icon" href="/images/favicons/androidChrome192x192.png">
+        <link rel="icon" href="/images/favicons/androidChrome512x512.png">
+        <link rel="apple-touch-icon" href="/images/favicons/appleTouchIcon.png">
+        <link rel="icon" href="/images/favicons/favicon16x16.png">
+        <link rel="icon" href="/images/favicons/favicon32x32.png">
+        <link rel="manifest" href="/site.webmanifest">
         <script>
             window.APP_CONTEXT = <?= json_encode([
                 'applicationOpen' => (bool) $applicationOpen,
