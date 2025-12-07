@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/GoogleService.php';
+require_once __DIR__ . '/ContentService.php';
 require_once __DIR__ . '/Logger.php';
 
 const APP_DEVELOPER_SESSION_KEY = 'developer_authenticated';
@@ -41,42 +42,12 @@ function developer_hash_password(string $password): string
  */
 function developer_fetch_sheet_credentials(array $config, ?AppLogger $logger = null): array
 {
-    $googleConfig = $config['google'] ?? [];
-    $sheetId = (string) ($config['google']['developer_sheet_id'] ?? '');
-    $range = (string) ($config['google']['developer_sheet_range'] ?? 'Developer!A:B');
-
-    if ($sheetId === '') {
-        throw new RuntimeException('Developer credentials sheet is not configured.');
-    }
-
-    $values = google_sheets_get_values(
-        $googleConfig,
-        [
-            'spreadsheet_id' => $sheetId,
-            'range' => $range,
-        ],
-        null,
-        $logger
-    );
-
-    $mapped = [];
-    foreach ($values as $row) {
-        if (!isset($row[0]) || !isset($row[1])) {
-            continue;
-        }
-
-        $key = trim((string) $row[0]);
-        if ($key === '') {
-            continue;
-        }
-
-        $mapped[$key] = trim((string) $row[1]);
-    }
-
     $credentials = [];
+    $values = site_content_values($config, $logger);
+
     foreach (['developer_mode_username', 'developer_mode_password'] as $credentialKey) {
-        if (array_key_exists($credentialKey, $mapped)) {
-            $credentials[$credentialKey] = $mapped[$credentialKey];
+        if (array_key_exists($credentialKey, $values)) {
+            $credentials[$credentialKey] = $values[$credentialKey];
         }
     }
 
@@ -100,10 +71,10 @@ function developer_validate_credentials(array $config, string $username, string 
 
         return false;
     }
-    $expectedUser = $credentials['developer_mode_username'] ?? '';
-    $expectedPasswordHash = $credentials['developer_mode_password'] ?? '';
+    $expectedUser = trim((string) ($credentials['developer_mode_username'] ?? ''));
+    $expectedPassword = (string) ($credentials['developer_mode_password'] ?? '');
 
-    if ($expectedUser === '' || $expectedPasswordHash === '') {
+    if ($expectedUser === '' || $expectedPassword === '') {
         if ($logger instanceof AppLogger && $logger->isEnabled()) {
             $logger->error('Developer credentials are missing in the sheet.');
         }
@@ -111,10 +82,14 @@ function developer_validate_credentials(array $config, string $username, string 
         return false;
     }
 
-    // Stored passwords are expected to be pre-hashed in the sheet using the developer_hash_password scheme.
-    $suppliedHash = developer_hash_password($password);
+    // Hash both stored and supplied values before comparison to avoid relying on plaintext sheet entries.
+    $expectedUserHash = developer_hash_password($expectedUser);
+    $expectedPasswordHash = developer_hash_password($expectedPassword);
+    $suppliedUserHash = developer_hash_password($username);
+    $suppliedPasswordHash = developer_hash_password($password);
 
-    return hash_equals($expectedUser, $username) && hash_equals($expectedPasswordHash, $suppliedHash);
+    return hash_equals($expectedUserHash, $suppliedUserHash)
+        && hash_equals($expectedPasswordHash, $suppliedPasswordHash);
 }
 
 function developer_start_session(string $username): void
