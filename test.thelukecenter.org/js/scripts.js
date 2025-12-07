@@ -357,7 +357,7 @@ function initializeDeveloperLogin()
                         };
 
                         try {
-                                const response = await fetch('/developer-login.php', {
+                                const response = await fetch('/developerLogin.php', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify(payload),
