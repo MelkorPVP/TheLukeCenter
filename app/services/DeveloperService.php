@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * Commenting convention:
+ * - Docblocks summarize function intent along with key inputs/outputs.
+ * - Inline context comments precede major initialization, configuration, or external calls.
+ */
+
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/GoogleService.php';
 require_once __DIR__ . '/Logger.php';
@@ -75,6 +81,7 @@ function developer_fetch_sheet_credentials(array $config, ?AppLogger $logger = n
  */
 function developer_validate_credentials(array $config, string $username, string $password, ?AppLogger $logger = null): bool
 {
+    // Pull credentials from the Google Sheet so operators can rotate them without code changes.
     $credentials = developer_fetch_sheet_credentials($config, $logger);
     $expectedUser = $credentials['DeveloperModeUsername'] ?? '';
     $expectedPassword = $credentials['DeveloperModePassword'] ?? '';

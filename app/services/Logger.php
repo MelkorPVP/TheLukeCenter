@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+/**
+ * Commenting convention:
+ * - Docblocks summarize function intent along with key inputs/outputs.
+ * - Inline context comments precede major initialization, configuration, or external calls.
+ */
+
 class AppLogger
 {
     /**
@@ -80,6 +86,7 @@ class AppLogger
 
     public function write(string $level, string $message, array $context = []): void
     {
+        // Respect configuration-driven disablement before constructing log payloads.
         if (!$this->enabled) {
             return;
         }

@@ -1,10 +1,16 @@
 <?php
     
     declare(strict_types=1);
-    
+
+    /**
+     * Commenting convention:
+     * - Docblocks summarize function intent along with key inputs/outputs.
+     * - Inline context comments precede major initialization, configuration, or external calls.
+     */
+
     require_once __DIR__ . '/GoogleService.php';
     require_once __DIR__ . '/Logger.php';
-    
+
     /**
         * Location for file-based content cache.
     */
@@ -158,6 +164,7 @@
     */
     function site_content_resolve_payload(array $config, ?AppLogger $logger = null): array
     {
+        // Hold per-environment payloads in-memory to avoid repeated disk or API reads.
         static $payloads = [];
         $env = (string) ($config['environment'] ?? APP_ENV_PROD);
 
@@ -166,6 +173,7 @@
             return $payloads[$env];
         }
 
+        // Prefer on-disk cache first, then fall back to fresh Google fetches.
         $cached = site_content_load_cached_payload($config, $logger);
         if ($cached !== null)
         {
@@ -378,6 +386,7 @@
     */
     function site_content_fetch_payload(array $config, ?AppLogger $logger = null): array
     {
+        // Gather all Google-backed resources together so cache writes remain atomic.
         $values = site_content_fetch_values_from_google($config, $logger);
         $testimonials = site_content_fetch_testimonials_from_google($config, $logger);
         $images = site_content_fetch_gallery_images_from_google($config, $logger);
