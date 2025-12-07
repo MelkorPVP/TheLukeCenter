@@ -172,10 +172,12 @@ function app_base_configuration(): array
     // Prefer environment-specific variables. Keep test configuration completely separate
     // from production so cached data and sheet selections never overlap.
     $siteValuesRange = app_read_env('GOOGLE_SITE_VALUES_RANGE', 'Values!A:B');
+    $siteValuesSheetIdProd = app_read_env('GOOGLE_SITE_VALUES_SHEET_ID_PROD', app_read_env('GOOGLE_SITE_VALUES_SHEET_ID'));
+    $siteValuesSheetIdTest = app_read_env('GOOGLE_SITE_VALUES_SHEET_ID_TEST', app_read_env('GOOGLE_SITE_VALUES_SHEET_ID'));
     $testimonialsRange = app_read_env('GOOGLE_SITE_TESTIMONIALS_RANGE', 'Values!A:A');
 
     $prodSheets = [
-        'site_values_spreadsheet_id' => app_read_env('GOOGLE_SITE_VALUES_SHEET_ID_PROD', app_read_env('GOOGLE_SITE_VALUES_SHEET_ID')),
+        'site_values_spreadsheet_id' => $siteValuesSheetIdProd,
         'site_values_range' => $siteValuesRange,
         'contact_spreadsheet_id' => app_read_env('GOOGLE_CONTACT_SHEET_ID_PROD', app_read_env('GOOGLE_CONTACT_SHEET_ID')),
         'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB', 'Submissions'),
@@ -185,12 +187,12 @@ function app_base_configuration(): array
         'gallery_folder_id' => app_read_env('GOOGLE_GALLERY_FOLDER_ID_PROD', app_read_env('GOOGLE_GALLERY_FOLDER_ID')),
         'testimonials_spreadsheet_id' => app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID_PROD', app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID')),
         'testimonials_range' => $testimonialsRange,
-        'developer_sheet_id' => app_read_env('GOOGLE_DEVELOPER_SHEET_ID_PROD', app_read_env('GOOGLE_DEVELOPER_SHEET_ID')),
-        'developer_sheet_range' => app_read_env('GOOGLE_DEVELOPER_SHEET_RANGE', 'Developer!A:B'),
+        'developer_sheet_id' => $siteValuesSheetIdProd,
+        'developer_sheet_range' => $siteValuesRange,
     ];
 
     $testSheets = [
-        'site_values_spreadsheet_id' => app_read_env('GOOGLE_SITE_VALUES_SHEET_ID_TEST', app_read_env('GOOGLE_SITE_VALUES_SHEET_ID')),
+        'site_values_spreadsheet_id' => $siteValuesSheetIdTest,
         'site_values_range' => $siteValuesRange,
         'contact_spreadsheet_id' => app_read_env('GOOGLE_CONTACT_SHEET_ID_TEST', app_read_env('GOOGLE_CONTACT_SHEET_ID')),
         'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB_TEST', 'Submissions'),
@@ -199,8 +201,8 @@ function app_base_configuration(): array
         'gallery_folder_id' => app_read_env('GOOGLE_GALLERY_FOLDER_ID_TEST', app_read_env('GOOGLE_GALLERY_FOLDER_ID')),
         'testimonials_spreadsheet_id' => app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID_TEST', app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID')),
         'testimonials_range' => $testimonialsRange,
-        'developer_sheet_id' => app_read_env('GOOGLE_DEVELOPER_SHEET_ID_TEST', app_read_env('GOOGLE_DEVELOPER_SHEET_ID')),
-        'developer_sheet_range' => app_read_env('GOOGLE_DEVELOPER_SHEET_RANGE', 'Developer!A:B'),
+        'developer_sheet_id' => $siteValuesSheetIdTest,
+        'developer_sheet_range' => $siteValuesRange,
     ];
 
     $gmailSender = app_read_env('GOOGLE_GMAIL_SENDER', 'contact@thelukecenter.org');
