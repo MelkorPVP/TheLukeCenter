@@ -6,9 +6,9 @@
     /**
         * Google API helpers for Sheets and Gmail via OAuth 2.0.
         * Token storage path is controlled from app/config.php via:
-        *   'token_base_dir' => '/home3/youraccount',
-        *   'token_subdir'   => 'tokenStorage',
-        *   // optional: 'token_file' => 'google-api-oauth-token.json'
+        * 'token_base_dir' => '/home3/youraccount',
+        * 'token_subdir'   => 'tokenStorage',
+        * // optional: 'token_file' => 'google-api-oauth-token.json'
     */
     
     /* ============================================================================
@@ -20,13 +20,13 @@
         *
         * @param array<string,mixed> $googleConfig
         * @return array{
-        *   client_id:string,
-        *   client_secret:string,
-        *   redirect_uri:string,
-        *   scopes:array<int,string>,
-        *   token_base_dir:string,
-        *   token_subdir:string,
-        *   token_file:string
+        * client_id:string,
+        * client_secret:string,
+        * redirect_uri:string,
+        * scopes:array<int,string>,
+        * token_base_dir:string,
+        * token_subdir:string,
+        * token_file:string
         * }
     */
     function google_normalize_oauth_config(array $googleConfig): array
@@ -65,8 +65,9 @@
         . DIRECTORY_SEPARATOR
         . trim($oauth['token_subdir'], DIRECTORY_SEPARATOR);
         
+        // CHANGED: 0700 -> 0755 to ensure cron/group users can traverse into this folder
         if (!is_dir($dir)) {
-            mkdir($dir, 0700, true);
+            mkdir($dir, 0755, true);
         }
         
         return $dir;
@@ -115,13 +116,16 @@
         $path = google_get_token_path($googleConfig);
         $dir  = dirname($path);
         
+        // CHANGED: 0700 -> 0755 for directory creation
         if (!is_dir($dir)) {
-            mkdir($dir, 0700, true);
+            mkdir($dir, 0755, true);
         }
         
         $json = json_encode($token, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         file_put_contents($path, $json, LOCK_EX);
-        @chmod($path, 0600);
+        
+        // CHANGED: 0600 -> 0644 to ensure Group (cron) can read the file
+        @chmod($path, 0644);
     }
     
     /**
@@ -499,4 +503,4 @@
         $googleConfig,
         $logger
         );
-    }
+    }    

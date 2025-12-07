@@ -2,40 +2,56 @@
     
     declare(strict_types=1);
     
-    // --- START: Load Environment Variables from .htaccess ---
-    // We must do this BEFORE requiring bootstrap.php so the environment is ready
-    $htaccessPath = '/home1/bnrortmy/.htaccess';
+    // --- START: Cron Environment Fixer ---
     
+    // 1. Mock Web Environment Variables
+    // Some OAuth libraries require HTTP_HOST or SERVER_NAME to be set.
+    $_SERVER['DOCUMENT_ROOT'] = '/home1/bnrortmy/public_html';
+    $_SERVER['HTTP_HOST'] = 'www.thelukecenter.org'; // Adjust if your domain is different
+    $_SERVER['SERVER_NAME'] = $_SERVER['HTTP_HOST'];
+    $_SERVER['REQUEST_URI'] = '/';
+    $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+    
+    // 2. Fix Working Directory
+    // Force the script to "stand" in public_html, just like the web server does.
+    // This fixes relative paths like "../tokenStorage"
+    if (is_dir($_SERVER['DOCUMENT_ROOT'])) {
+        chdir($_SERVER['DOCUMENT_ROOT']);
+    }
+    
+    // 3. Load Variables from .htaccess
+    $htaccessPath = '/home1/bnrortmy/.htaccess';
     if (file_exists($htaccessPath)) {
-        // Read file into an array, skipping empty lines
         $lines = file($htaccessPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        
         foreach ($lines as $line) {
-            // Look for lines starting with "SetEnv"
-            // Regex captures: 1=Key, 2=Value inside quotes, 3=Value without quotes
             if (preg_match('/^\s*SetEnv\s+([A-Za-z0-9_]+)\s+(?:\"([^\"]+)\"|([^\s]+))/', $line, $matches)) {
                 $key = $matches[1];
-                // If match[2] is empty, use match[3] (unquoted value)
                 $value = !empty($matches[2]) ? $matches[2] : ($matches[3] ?? '');
-                
-                // Populate PHP environment variables so getenv() and $_ENV work
                 putenv("$key=$value");
                 $_ENV[$key] = $value;
                 $_SERVER[$key] = $value;
             }
         }
     }
-    // --- END: Load Environment Variables from .htaccess ---
+    
+    // 4. Pre-flight Debug: Check Token Accessibility
+    // This will print a clear error to your log if the file is physically unreadable
+    $tokenPath = '/home1/bnrortmy/tokenStorage/google-api-oauth-token.json';
+    if (!file_exists($tokenPath)) {
+        fwrite(STDERR, "CRITICAL DEBUG: Token file not found at: $tokenPath\n");
+        fwrite(STDERR, "Current Working Dir: " . getcwd() . "\n");
+        } elseif (!is_readable($tokenPath)) {
+        fwrite(STDERR, "CRITICAL DEBUG: Token file exists but is NOT readable. Check permissions.\n");
+    }
+    // --- END: Cron Environment Fixer ---
+    
     
     $bootstrap = require __DIR__ . '/../bootstrap.php';
     
-    // Preserve the shared logging config, but rebuild per-environment configs so each
-    // warmup run uses its own Google sheet IDs instead of whichever environment was
-    // detected when bootstrap.php ran.
+    // Preserve the shared logging config, but rebuild per-environment configs
     $loggingConfig = $bootstrap['config']['logging'] ?? [];
     
     $exitCode = 0;
-    // Note: APP_ENV_PROD and APP_ENV_TEST are assumed to be defined in bootstrap.php
     $environments = [APP_ENV_PROD, APP_ENV_TEST];
     
     foreach ($environments as $environment)
@@ -49,7 +65,6 @@
         
         try
         {
-            // Always fetch fresh content to avoid any in-memory/static caches.
             $payload = site_content_fetch_payload($envConfig, $envLogger);
             site_content_save_cache($envConfig, $payload, $envLogger);
             
