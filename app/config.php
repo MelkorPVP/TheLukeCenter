@@ -38,6 +38,86 @@ function app_public_path(string $file, ?string $environment = null): string
     throw new RuntimeException(sprintf('Public asset %s not found in %s or shared overlay', $relative, $environment));
 }
 
+function app_htaccess_path(): string
+{
+    return app_public_root() . '/.htaccess';
+}
+
+/**
+ * @return array<string,string>
+ */
+function app_load_htaccess_flags(bool $forceReload = false): array
+{
+    static $cached = null;
+
+    if ($cached !== null && !$forceReload) {
+        return $cached;
+    }
+
+    $path = app_htaccess_path();
+    if (!is_file($path)) {
+        $cached = [];
+
+        return $cached;
+    }
+
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+    $flags = [];
+
+    foreach ($lines as $line) {
+        if (preg_match('/^\s*SetEnv\s+([A-Za-z_][A-Za-z0-9_]*)\s+(.+)$/i', trim($line), $matches)) {
+            $flags[$matches[1]] = trim($matches[2]);
+        }
+    }
+
+    $cached = $flags;
+
+    return $cached;
+}
+
+/**
+ * @param array<string,string|bool> $flags
+ * @return array<string,string>
+ */
+function app_write_htaccess_flags(array $flags): array
+{
+    $path = app_htaccess_path();
+    $existingLines = is_file($path) ? (file($path, FILE_IGNORE_NEW_LINES) ?: []) : [];
+
+    $normalized = [];
+    foreach ($flags as $key => $value) {
+        $normalized[$key] = is_bool($value) ? ($value ? 'true' : 'false') : (string) $value;
+    }
+
+    $keysPattern = implode('|', array_map('preg_quote', array_keys($normalized)));
+    $preservedLines = [];
+
+    foreach ($existingLines as $line) {
+        if ($keysPattern !== '' && preg_match('/^\s*SetEnv\s+(' . $keysPattern . ')\b/i', $line)) {
+            continue;
+        }
+
+        if (trim($line) === '# Managed application flags') {
+            continue;
+        }
+
+        $preservedLines[] = rtrim($line);
+    }
+
+    $managedLines = ['# Managed application flags'];
+    foreach ($normalized as $key => $value) {
+        $managedLines[] = sprintf('SetEnv %s %s', $key, $value);
+    }
+
+    $payload = array_merge($preservedLines, $managedLines);
+    $contents = implode(PHP_EOL, $payload) . PHP_EOL;
+
+    file_put_contents($path, $contents, LOCK_EX);
+
+    // Reset cache
+    return app_load_htaccess_flags(true);
+}
+
 function app_detect_environment(): string
 {
     // Allow explicit environment selection via env vars.
@@ -62,6 +142,11 @@ function app_read_env(string $key, string $fallback = ''): string
 {
     $value = getenv($key);
     if ($value === false) {
+        $flags = app_load_htaccess_flags();
+        if (array_key_exists($key, $flags)) {
+            return (string) $flags[$key];
+        }
+
         return $fallback;
     }
 
@@ -73,6 +158,13 @@ function app_is_logging_enabled(): bool
     $raw = strtoupper(trim(app_read_env('ENABLE_APPLICATION_LOGGING')));
 
     return $raw === 'TRUE';
+}
+
+function app_is_developer_mode(): bool
+{
+    $raw = strtoupper(trim(app_read_env('DEVELOPER_MODE')));
+
+    return in_array($raw, ['TRUE', '1', 'YES'], true);
 }
 
 function app_email_list(string $raw): array
@@ -101,6 +193,8 @@ function app_base_configuration(): array
         'gallery_folder_id' => app_read_env('GOOGLE_GALLERY_FOLDER_ID_PROD', app_read_env('GOOGLE_GALLERY_FOLDER_ID')),
         'testimonials_spreadsheet_id' => app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID_PROD', app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID')),
         'testimonials_range' => $testimonialsRange,
+        'developer_sheet_id' => app_read_env('GOOGLE_DEVELOPER_SHEET_ID_PROD', app_read_env('GOOGLE_DEVELOPER_SHEET_ID')),
+        'developer_sheet_range' => app_read_env('GOOGLE_DEVELOPER_SHEET_RANGE', 'Developer!A:B'),
     ];
 
     $testSheets = [
@@ -113,6 +207,8 @@ function app_base_configuration(): array
         'gallery_folder_id' => app_read_env('GOOGLE_GALLERY_FOLDER_ID_TEST', app_read_env('GOOGLE_GALLERY_FOLDER_ID')),
         'testimonials_spreadsheet_id' => app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID_TEST', app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID')),
         'testimonials_range' => $testimonialsRange,
+        'developer_sheet_id' => app_read_env('GOOGLE_DEVELOPER_SHEET_ID_TEST', app_read_env('GOOGLE_DEVELOPER_SHEET_ID')),
+        'developer_sheet_range' => app_read_env('GOOGLE_DEVELOPER_SHEET_RANGE', 'Developer!A:B'),
     ];
 
     $gmailSender = app_read_env('GOOGLE_GMAIL_SENDER', 'contact@thelukecenter.org');

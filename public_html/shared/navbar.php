@@ -18,7 +18,36 @@
                         <li class="nav-item"><a class="nav-link" href="/board.php">Board of Directors</a></li>
                         <li class="nav-item"><a class="nav-link" href="/apply.php">Apply</a></li>
                         <li class="nav-item"><a class="nav-link" href="/contact.php">Contact</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" data-developer-login>Administration</a></li>
                 </ul>
         </div>
 </nav>
+<!-- BEGIN Developer Login Modal -->
+<div class="modal fade" id="developerLoginModal" tabindex="-1" aria-labelledby="developerLoginLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="developerLoginLabel">Developer Login</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form data-developer-login-form>
+                    <div class="mb-3">
+                        <label class="form-label" for="developerUsername">Username</label>
+                        <input type="text" class="form-control" id="developerUsername" name="username" required autocomplete="username">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="developerPassword">Password</label>
+                        <input type="password" class="form-control" id="developerPassword" name="password" required autocomplete="current-password">
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-brand">Sign In</button>
+                        <div class="alert alert-danger d-none mb-0" role="alert" data-login-status></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END Developer Login Modal -->
 <!-- END NAV BAR -->

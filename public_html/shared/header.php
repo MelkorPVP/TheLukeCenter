@@ -10,12 +10,16 @@
         $programLocation = $programLocation ?? site_content_program_location($config, $logger ?? null);
         $programDates = $programDates ?? site_content_program_dates($config, $logger ?? null);
         $applicationOpen = $applicationOpen ?? site_content_application_open($config, $logger ?? null);
+        $developerMode = $developerMode ?? app_is_developer_mode();
     } else {
         $applicationOpen = $applicationOpen ?? false;
         $programName = $programName ?? '';
         $programLocation = $programLocation ?? '';
         $programDates = $programDates ?? '';
+        $developerMode = $developerMode ?? false;
     }
+
+    $developerSession = developer_is_authenticated();
     
 ?>
 <!doctype html>
@@ -33,6 +37,8 @@
                 'programName' => $programName,
                 'programLocation' => $programLocation,
                 'programDates' => $programDates,
+                'developerMode' => (bool) $developerMode,
+                'developerSession' => (bool) $developerSession,
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
         </script>
     </head>
