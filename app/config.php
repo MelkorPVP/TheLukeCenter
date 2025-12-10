@@ -70,7 +70,9 @@ function app_load_htaccess_flags(bool $forceReload = false): array
 
     foreach ($lines as $line) {
         if (preg_match('/^\s*SetEnv\s+([A-Za-z_][A-Za-z0-9_]*)\s+(.+)$/i', trim($line), $matches)) {
-            $flags[$matches[1]] = trim($matches[2]);
+            $value = trim($matches[2]);
+            $valueParts = preg_split('/\s+#/', $value, 2);
+            $flags[$matches[1]] = trim($valueParts[0]);
         }
     }
 
@@ -93,28 +95,32 @@ function app_write_htaccess_flags(array $flags): array
         $normalized[$key] = is_bool($value) ? ($value ? 'true' : 'false') : (string) $value;
     }
 
-    $keysPattern = implode('|', array_map('preg_quote', array_keys($normalized)));
-    $preservedLines = [];
+    $remaining = $normalized;
+    $updatedLines = [];
 
     foreach ($existingLines as $line) {
-        if ($keysPattern !== '' && preg_match('/^\s*SetEnv\s+(' . $keysPattern . ')\b/i', $line)) {
-            continue;
+        $updatedLine = $line;
+
+        foreach ($normalized as $key => $value) {
+            $pattern = '/^(\s*SetEnv\s+' . preg_quote($key, '/') . '\s+)(\S+)(.*)$/i';
+            if (preg_match($pattern, $line, $matches)) {
+                $updatedLine = $matches[1] . $value . $matches[3];
+                unset($remaining[$key]);
+                break;
+            }
         }
 
-        if (trim($line) === '# Managed application flags') {
-            continue;
-        }
-
-        $preservedLines[] = rtrim($line);
+        $updatedLines[] = rtrim($updatedLine, "\r\n");
     }
 
-    $managedLines = ['# Managed application flags'];
-    foreach ($normalized as $key => $value) {
-        $managedLines[] = sprintf('SetEnv %s %s', $key, $value);
+    foreach ($remaining as $key => $value) {
+        $updatedLines[] = sprintf('SetEnv %s %s', $key, $value);
     }
 
-    $payload = array_merge($preservedLines, $managedLines);
-    $contents = implode(PHP_EOL, $payload) . PHP_EOL;
+    $contents = implode(PHP_EOL, $updatedLines);
+    if ($contents !== '') {
+        $contents .= PHP_EOL;
+    }
 
     file_put_contents($path, $contents, LOCK_EX);
 
