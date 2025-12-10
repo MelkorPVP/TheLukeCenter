@@ -1,9 +1,34 @@
+// --- Lightweight logger ---
+const logger = (() =>
+{
+        const ctx = window.APP_CONTEXT || {};
+        const dataFlag = () =>
+        {
+                const body = document.body;
+                if (!body) return false;
+                return body.getAttribute('data-logging-enabled') === 'true';
+        };
+
+        const enabled = Boolean(ctx.developerMode || ctx.loggingEnabled || dataFlag());
+        const prefix  = '[LC]';
+
+        return {
+                enabled,
+                debug: (...args) =>
+                {
+                        if (!enabled) return;
+                        console.debug(prefix, ...args);
+                },
+        };
+})();
+
 // --- Navbar: active state ---
-function initializeNav() 
-{	
-	const normalizePathname = (path) => path.replace(/\/$/, '') || '/index.php';	
-	const currentPathname   = normalizePathname(location.pathname);	
-	const navLinkNodeList = document.querySelectorAll('#primaryNav .nav-link');	
+function initializeNav()
+{
+        logger.debug('initializeNav: start');
+        const normalizePathname = (path) => path.replace(/\/$/, '') || '/index.php';
+        const currentPathname   = normalizePathname(location.pathname);
+        const navLinkNodeList = document.querySelectorAll('#primaryNav .nav-link');
 	
 	navLinkNodeList.forEach((navLinkElement) => 		
 		{			
@@ -13,21 +38,23 @@ function initializeNav()
 			if (linkHref.startsWith('mailto:') || linkHref.startsWith('tel:') || linkHref.startsWith('#')) return;			
 			
 			const targetPathname = normalizePathname(new URL(linkHref, location.origin).pathname);			
-			if (targetPathname === currentPathname) 			
-			{				
-				navLinkElement.classList.add('active');				
-				navLinkElement.setAttribute('aria-current', 'page');				
-			}			
-		});		
+                        if (targetPathname === currentPathname)
+                        {
+                                navLinkElement.classList.add('active');
+                                navLinkElement.setAttribute('aria-current', 'page');
+                                logger.debug('initializeNav: set active nav link', linkHref);
+                        }
+                });
 }
 
 // --- Form: run native HTML5 validation + scroll to errors ---
 function initializeForm(formId, statusId)
-{	
-    const formElement   = document.getElementById(formId);	
-    const statusElement = document.getElementById(statusId);	
-	
-    if (!formElement || !statusElement) return;	
+{
+    logger.debug('initializeForm: start', { formId, statusId });
+    const formElement   = document.getElementById(formId);
+    const statusElement = document.getElementById(statusId);
+
+    if (!formElement || !statusElement) return;
 	
     // Helper to show user-friendly status in the same alert area used for success/error messages.	
     const setStatus = (message, type) =>	
@@ -44,44 +71,49 @@ function initializeForm(formId, statusId)
         statusElement.classList.remove('alert-success', 'alert-danger', 'alert-primary');		
 	};	
 	
-    // Clear status when the user edits any field	
-    formElement.addEventListener('input', (event) =>		
-		{			
-			if (event.target.matches('input, select, textarea')) hideStatus();			
-		});		
-		
-		// Also clear on 'invalid' events (just for the alert box)		
-		formElement.addEventListener('invalid', () =>			
-			{				
-				hideStatus();				
-			}, true);			
+    // Clear status when the user edits any field
+    formElement.addEventListener('input', (event) =>
+                {
+                        if (event.target.matches('input, select, textarea')) hideStatus();
+                });
+    logger.debug('initializeForm: input listener attached', formId);
+
+                // Also clear on 'invalid' events (just for the alert box)
+                formElement.addEventListener('invalid', () =>
+                        {
+                                hideStatus();
+                        }, true);
+    logger.debug('initializeForm: invalid listener attached', formId);
 			
 			// Handle submit buttons explicitly			
-			const submitButtons = formElement.querySelectorAll('button[type="submit"], input[type="submit"]');			
-			
-			submitButtons.forEach((btn) =>				
-				{					
-					btn.addEventListener('click', (event) =>						
-						{							
-							// Always take over submit behavior							
-							event.preventDefault();							
-							event.stopPropagation();							
-							
-							// If the form is valid, submit immediately							
-							if (formElement.checkValidity())							
-							{								
-								// Surface an immediate, blue Bootstrap alert so the user knows the submit is in progress.								
-								setStatus('Submitting, please wait…', 'primary');								
-								
-								// Prevent duplicate submissions while the page posts back.								
-								submitButtons.forEach((button) => button.setAttribute('disabled', 'disabled'));								
-								formElement.submit(); // we already validated								
-								return;								
-							}							
-							
-							// Form is invalid: find the first invalid field							
-							const firstInvalid = formElement.querySelector(':invalid');							
-							if (!firstInvalid) return;							
+                        const submitButtons = formElement.querySelectorAll('button[type="submit"], input[type="submit"]');
+
+                        submitButtons.forEach((btn) =>
+                                {
+                                        btn.addEventListener('click', (event) =>
+                                                {
+                                                        // Always take over submit behavior
+                                                        event.preventDefault();
+                                                        event.stopPropagation();
+
+                                                        // If the form is valid, submit immediately
+                                                        if (formElement.checkValidity())
+                                                        {
+                                                                // Surface an immediate, blue Bootstrap alert so the user knows the submit is in progress.
+                                                                setStatus('Submitting, please wait…', 'primary');
+
+                                                                // Prevent duplicate submissions while the page posts back.
+                                                                submitButtons.forEach((button) => button.setAttribute('disabled', 'disabled'));
+                                                                formElement.submit(); // we already validated
+                                                                logger.debug('initializeForm: submitted valid form', formId);
+                                                                return;
+                                                        }
+
+                                                        // Form is invalid: find the first invalid field
+                                                        const firstInvalid = formElement.querySelector(':invalid');
+                                                        if (!firstInvalid) return;
+
+                                                        logger.debug('initializeForm: invalid form, focusing first error', { formId, fieldId: firstInvalid.id || firstInvalid.name || '' });
 							
 							// Use a higher-level container for better scroll positioning							
 							const container = firstInvalid.closest('.col-md-6, .col-12, .form-group') || firstInvalid;							
@@ -107,10 +139,11 @@ function initializeForm(formId, statusId)
 									}									
 									
 									// This shows "Please fill out this field."									
-									firstInvalid.reportValidity();									
-								}, 300); // adjust delay if needed								
-						});						
-				});				
+                                                                firstInvalid.reportValidity();
+                                                                }, 300); // adjust delay if needed
+                                                });
+                                });
+                        logger.debug('initializeForm: submit listeners attached', formId, submitButtons.length);
 }
 
 
@@ -146,9 +179,10 @@ const fetchGalleryPayload = (endpoint) =>
 
 
 function initializeGalleryRotator()
-{	
-	const root = document.getElementById('galleryRoot');	
-	if (!root) return;	
+{
+        logger.debug('initializeGalleryRotator: start');
+        const root = document.getElementById('galleryRoot');
+        if (!root) return;
 	
 	const endpoint = root.getAttribute('data-gallery-endpoint') || '/galleryData.php';	
 	const imgEl    = document.getElementById('galleryImage');	
@@ -214,50 +248,56 @@ function initializeGalleryRotator()
 		
 		persistIndex(imageIndex); // NEW: save on every successful set
 		
-		const item = images[imageIndex];		
-		
-		imgEl.dataset.imageId = item.id || item.url;		
-		imgEl.src = item.url;		
-		imgEl.alt = item.name || 'Gallery image';		
-	};	
+                const item = images[imageIndex];
+
+                imgEl.dataset.imageId = item.id || item.url;
+                imgEl.src = item.url;
+                imgEl.alt = item.name || 'Gallery image';
+                logger.debug('initializeGalleryRotator: set image', { index: imageIndex, id: imgEl.dataset.imageId });
+        };
 	
 	const nextImage = () => setImage(imageIndex + 1);	
 	const prevImage = () => setImage(imageIndex - 1);	
 	
-	const startImageAuto = () =>	
-	{		
-		if (imageTimer || images.length <= 1) return;		
-		imageTimer = setInterval(nextImage, imageIntervalMs);		
-	};	
+        const startImageAuto = () =>
+        {
+                if (imageTimer || images.length <= 1) return;
+                imageTimer = setInterval(nextImage, imageIntervalMs);
+                logger.debug('initializeGalleryRotator: auto-rotation started');
+        };
 	
-	const stopImageAuto = () =>	
-	{		
-		if (imageTimer) 
-		{			
-			clearInterval(imageTimer);			
-			imageTimer = null;			
-		}		
-	};	
+        const stopImageAuto = () =>
+        {
+                if (imageTimer)
+                {
+                        clearInterval(imageTimer);
+                        imageTimer = null;
+                        logger.debug('initializeGalleryRotator: auto-rotation stopped');
+                }
+        };
 	
-	const scheduleResume = () =>	
-	{		
-		if (resumeTimer) clearTimeout(resumeTimer);		
-		resumeTimer = setTimeout(() =>			
-			{				
-				startImageAuto();				
-			}, idleResumeMs);			
-	};	
+        const scheduleResume = () =>
+        {
+                if (resumeTimer) clearTimeout(resumeTimer);
+                resumeTimer = setTimeout(() =>
+                        {
+                                startImageAuto();
+                        }, idleResumeMs);
+                logger.debug('initializeGalleryRotator: auto-rotation scheduled to resume');
+        };
 	
-	const manualAdvance = (fn) =>	
-	{		
-		stopImageAuto();		
-		fn();		
-		scheduleResume();		
-	};	
+        const manualAdvance = (fn) =>
+        {
+                stopImageAuto();
+                fn();
+                scheduleResume();
+                logger.debug('initializeGalleryRotator: manual advance invoked');
+        };
 	
 	// Wire controls	
-	prevBtn.addEventListener('click', () => manualAdvance(prevImage));	
-	nextBtn.addEventListener('click', () => manualAdvance(nextImage));	
+        prevBtn.addEventListener('click', () => manualAdvance(prevImage));
+        nextBtn.addEventListener('click', () => manualAdvance(nextImage));
+        logger.debug('initializeGalleryRotator: navigation listeners attached');
 	
 	// Show a lightweight loading placeholder so the user sees immediate feedback.	
 	imgEl.src = fallbackImage;	
@@ -270,22 +310,24 @@ function initializeGalleryRotator()
 			// Filter out empty or malformed items to avoid broken thumbnails.				
 			images = (Array.isArray(data.images) ? data.images : []).filter((item) => item && item.url);				
 			
-			if (images.length) 
-			{					
-				// NEW: initialize from stored index
-				setImage(readStoredIndex());					
-				startImageAuto();					
-			} 
+                        if (images.length)
+                        {
+                                // NEW: initialize from stored index
+                                setImage(readStoredIndex());
+                                startImageAuto();
+                                logger.debug('initializeGalleryRotator: images loaded', images.length);
+                        }
 			else 
 			{					
 				imgEl.alt = 'No gallery images available';					
 			}				
 		})			
-		.catch(() =>				
-			{					
-				imgEl.alt = 'Failed to load gallery';					
-				imgEl.src = fallbackImage;					
-			});				
+                .catch(() =>
+                        {
+                                imgEl.alt = 'Failed to load gallery';
+                                imgEl.src = fallbackImage;
+                                logger.debug('initializeGalleryRotator: failed to load gallery payload');
+                        });
 			
 			// Skip broken images automatically instead of showing missing icons.				
 			imgEl.addEventListener('error', () =>					
@@ -293,16 +335,17 @@ function initializeGalleryRotator()
 					const failedId = imgEl.dataset.imageId || imgEl.src;						
 					if (failedId) failedImageIds.add(failedId);						
 					
-					if (failedImageIds.size >= images.length) 
-					{							
-						imgEl.src = fallbackImage;							
-						imgEl.alt = 'Unable to load gallery images';							
-						stopImageAuto();							
-						return;							
-					}						
-					
-					manualAdvance(nextImage);						
-				});					
+                                        if (failedImageIds.size >= images.length)
+                                        {
+                                                imgEl.src = fallbackImage;
+                                                imgEl.alt = 'Unable to load gallery images';
+                                                stopImageAuto();
+                                                return;
+                                        }
+
+                                        manualAdvance(nextImage);
+                                        logger.debug('initializeGalleryRotator: image failed, advancing', imgEl.dataset.imageId);
+                                });
 				
 				// Clean up on page hide					
 				window.addEventListener('pagehide', () =>						
@@ -314,8 +357,9 @@ function initializeGalleryRotator()
 
 function initializeTestimonialRotator()
 {
-	const quoteEl = document.getElementById('testimonialRotator');
-	if (!quoteEl) return;
+        logger.debug('initializeTestimonialRotator: start');
+        const quoteEl = document.getElementById('testimonialRotator');
+        if (!quoteEl) return;
 	
 	const galleryRoot = document.getElementById('galleryRoot');
 	
@@ -354,31 +398,34 @@ function initializeTestimonialRotator()
 	let quoteIndex = 0;
 	let quoteTimer = null;
 	
-	const setQuote = (index) =>
-	{
-		if (!testimonials.length) return;
-		
-		quoteIndex = (index + testimonials.length) % testimonials.length;
-		persistIndex(quoteIndex); // NEW: save on every successful set
-		quoteEl.textContent = testimonials[quoteIndex];
-	};
+        const setQuote = (index) =>
+        {
+                if (!testimonials.length) return;
+
+                quoteIndex = (index + testimonials.length) % testimonials.length;
+                persistIndex(quoteIndex); // NEW: save on every successful set
+                quoteEl.textContent = testimonials[quoteIndex];
+                logger.debug('initializeTestimonialRotator: set quote', { index: quoteIndex });
+        };
 	
 	const nextQuote = () => setQuote(quoteIndex + 1);
 	
-	const startQuoteAuto = () =>
-	{
-		if (quoteTimer || testimonials.length <= 1) return;
-		quoteTimer = setInterval(nextQuote, quoteIntervalMs);
-	};
+        const startQuoteAuto = () =>
+        {
+                if (quoteTimer || testimonials.length <= 1) return;
+                quoteTimer = setInterval(nextQuote, quoteIntervalMs);
+                logger.debug('initializeTestimonialRotator: auto-rotation started');
+        };
 	
-	const stopQuoteAuto = () =>
-	{
-		if (quoteTimer)
-		{
-			clearInterval(quoteTimer);
-			quoteTimer = null;
-		}
-	};
+        const stopQuoteAuto = () =>
+        {
+                if (quoteTimer)
+                {
+                        clearInterval(quoteTimer);
+                        quoteTimer = null;
+                        logger.debug('initializeTestimonialRotator: auto-rotation stopped');
+                }
+        };
 	
 	quoteEl.textContent = 'Loading testimonials…';
 	
@@ -387,20 +434,22 @@ function initializeTestimonialRotator()
 		{
 			testimonials = Array.isArray(data.testimonials) ? data.testimonials : [];
 			
-			if (!testimonials.length)
-			{
-				quoteEl.textContent = '';
-				return;
-			}
-			
-			// NEW: initialize from stored index
-			setQuote(readStoredIndex());
-			startQuoteAuto();
-		})
-		.catch(() =>
-			{
-				quoteEl.textContent = '';
-			});
+                        if (!testimonials.length)
+                        {
+                                quoteEl.textContent = '';
+                                return;
+                        }
+
+                        // NEW: initialize from stored index
+                        setQuote(readStoredIndex());
+                        startQuoteAuto();
+                        logger.debug('initializeTestimonialRotator: testimonials loaded', testimonials.length);
+                })
+                .catch(() =>
+                        {
+                                quoteEl.textContent = '';
+                                logger.debug('initializeTestimonialRotator: failed to load testimonials');
+                        });
 			
 			window.addEventListener('pagehide', () =>
 				{
@@ -410,11 +459,12 @@ function initializeTestimonialRotator()
 
 
 function initializeDeveloperLogin()
-{	
-	const trigger = document.querySelector('[data-developer-login]');	
-	const modalElement = document.getElementById('developerLoginModal');	
-	
-	if (!trigger || !modalElement || !window.bootstrap) return;	
+{
+        logger.debug('initializeDeveloperLogin: start');
+        const trigger = document.querySelector('[data-developer-login]');
+        const modalElement = document.getElementById('developerLoginModal');
+
+        if (!trigger || !modalElement || !window.bootstrap) return;
 	
 	const loginForm = modalElement.querySelector('[data-developer-login-form]');	
 	const statusBox = modalElement.querySelector('[data-login-status]');	
@@ -437,12 +487,13 @@ function initializeDeveloperLogin()
 		statusBox.classList.toggle('alert-danger', !isSuccess);		
 	};	
 	
-	trigger.addEventListener('click', (event) =>		
-        {			
-			event.preventDefault();			
-			resetStatus();			
-			modal.show();			
-		});		
+        trigger.addEventListener('click', (event) =>
+        {
+                        event.preventDefault();
+                        resetStatus();
+                        modal.show();
+                        logger.debug('initializeDeveloperLogin: trigger clicked');
+                });
 		
         if (loginForm)		
         {			
@@ -466,27 +517,31 @@ function initializeDeveloperLogin()
 						
 						const result = await response.json();						
 						
-						if (response.ok && result.success)						
-						{							
-							showStatus('Login successful. Redirecting…', true);							
-							setTimeout(() => { window.location.href = '/developer.php'; }, 400);							
-						}						
-						else						
-						{							
-							showStatus(result.error || 'Login failed.', false);							
-						}						
-                        } catch (error) {						
-						console.error(error);						
-						showStatus('Unexpected error during login.', false);						
-					}					
-				});				
-		}		
+                                                if (response.ok && result.success)
+                                                {
+                                                        showStatus('Login successful. Redirecting…', true);
+                                                        setTimeout(() => { window.location.href = '/developer.php'; }, 400);
+                                                        logger.debug('initializeDeveloperLogin: success');
+                                                }
+                                                else
+                                                {
+                                                        showStatus(result.error || 'Login failed.', false);
+                                                        logger.debug('initializeDeveloperLogin: failure');
+                                                }
+                        } catch (error) {
+                                                console.error(error);
+                                                showStatus('Unexpected error during login.', false);
+                                                logger.debug('initializeDeveloperLogin: exception');
+                                        }
+                                });
+                }
 }
 
 function initializeDeveloperTestData()
-{	
-	const ctx = window.APP_CONTEXT || {};	
-	if (!ctx.developerMode || !ctx.developerSession) return;	
+{
+        logger.debug('initializeDeveloperTestData: start');
+        const ctx = window.APP_CONTEXT || {};
+        if (!ctx.developerMode || !ctx.developerSession) return;
 	
 	const sampleData = {		
 		contactForm: {			
@@ -530,20 +585,21 @@ function initializeDeveloperTestData()
 		},		
 	};	
 	
-	const fillForm = (formElement, values) =>	
-	{		
-		Object.entries(values).forEach(([id, value]) =>			
-			{				
-				const field = formElement.querySelector('#' + id);				
+        const fillForm = (formElement, values) =>
+        {
+                Object.entries(values).forEach(([id, value]) =>
+                        {
+                                const field = formElement.querySelector('#' + id);
 				if (!field) return;				
 				
 				if (field.tagName === 'SELECT') {					
 					field.value = value;					
 					} else if (field.tagName === 'TEXTAREA' || field.tagName === 'INPUT') {					
-					field.value = value;					
-				}				
-			});			
-	};	
+                                        field.value = value;
+                                }
+                        });
+                logger.debug('initializeDeveloperTestData: form filled', formElement.id);
+        };
 	
 	Object.entries(sampleData).forEach(([formId, values]) =>		
         {			
@@ -557,17 +613,18 @@ function initializeDeveloperTestData()
 					if (button.dataset.testFillAttached === 'true') return;					
 					
 					const fillButton = document.createElement('button');					
-					fillButton.type = 'button';					
-					fillButton.className = 'btn btn-outline-brand';					
-					fillButton.textContent = 'Fill with test data';					
-					fillButton.addEventListener('click', () => fillForm(formElement, values));					
+                                        fillButton.type = 'button';
+                                        fillButton.className = 'btn btn-outline-brand';
+                                        fillButton.textContent = 'Fill with test data';
+                                        fillButton.addEventListener('click', () => fillForm(formElement, values));
 					
-					if (button.parentNode) {						
-						button.parentNode.insertBefore(fillButton, button);						
-					}					
-					button.dataset.testFillAttached = 'true';					
-				});				
-		});		
+                                        if (button.parentNode) {
+                                                button.parentNode.insertBefore(fillButton, button);
+                                        }
+                                        button.dataset.testFillAttached = 'true';
+                                        logger.debug('initializeDeveloperTestData: fill button attached', formElement.id);
+                                });
+                });
 }
 
 // Run immediately because <script> is deferred
