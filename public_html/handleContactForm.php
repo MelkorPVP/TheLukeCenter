@@ -1,123 +1,81 @@
 <?php
-    $container = require dirname(__DIR__) . '/app/bootstrap.php';
-    $config    = $container['config'] ?? [];
-    $logger    = $container['logger'] ?? null;
-	
-	//Header Location
-	$HEADERLOCATION = 'Location: contact.php#contactStatus';
-	
-	// VALIDATE HTTP REQUEST METHOD
-	if($_SERVER['REQUEST_METHOD'] !== 'POST')
-	{
-		$_SESSION['message'] = 'Invalid request method. Please use the form to submit data.';
-		$_SESSION['messageType'] = 'error';
-		header($HEADERLOCATION);
-		exit();
-	}
-	
-        // VALIDATE CSRF TOKEN
-        $csrfToken = $_SESSION['csrf_token'] ?? '';
-        $submittedToken = $_POST['csrf_token'] ?? '';
-        if ($csrfToken === '' || $submittedToken === '' || !hash_equals($csrfToken, (string)$submittedToken))
-        {
-                if ($logger instanceof AppLogger) {
-                        $logger->warning('Contact form submission blocked due to invalid CSRF token', [
-                                'session_id' => session_id(),
-                                'has_token' => $submittedToken !== '',
-                        ]);
-                }
+declare(strict_types=1);
 
-                $_SESSION['message'] = 'Your session has expired or is invalid. Please refresh and try again.';
-                $_SESSION['messageType'] = 'error';
-                header($HEADERLOCATION);
-                exit();
-        }
+$container = require dirname(__DIR__) . '/app/bootstrap.php';
+$config    = $container['config'] ?? [];
+$logger    = $container['logger'] ?? null;
 
-        // VALIDATE HTTP REQUEST PARAMETERS
-        if(!isset($_POST['contactFirstName'], $_POST['contactLastName'], $_POST['contactEmail'],$_POST['contactPhone'], $_POST['contactPhoneType'], $_POST['yearAttended']))
-        {
-                $_SESSION['message'] = 'Invalid request parameters. One or more required form parameters is missing.';
-		$_SESSION['messageType'] = 'error';
-		header($HEADERLOCATION);
-		exit();		
-	}
-	
-	// SANITIZE HTTP REQUEST PARAMETERS	
-	$contactFirstName = filter_input(INPUT_POST, 'contactFirstName', FILTER_SANITIZE_SPECIAL_CHARS);
-	$contactLastName = filter_input(INPUT_POST, 'contactLastName', FILTER_SANITIZE_SPECIAL_CHARS);
-	$contactEmail = filter_input(INPUT_POST, 'contactEmail', FILTER_SANITIZE_SPECIAL_CHARS);
-	$contactPhone = filter_input(INPUT_POST, 'contactPhone', FILTER_SANITIZE_SPECIAL_CHARS);
-	$contactPhoneType = filter_input(INPUT_POST, 'contactPhoneType', FILTER_SANITIZE_SPECIAL_CHARS);
-	$currentOrganization = filter_input(INPUT_POST, 'currentOrganization', FILTER_SANITIZE_SPECIAL_CHARS);
-	$yearAttended = filter_input(INPUT_POST, 'yearAttended', FILTER_SANITIZE_SPECIAL_CHARS);
-	
-	// ERRORS ARRAY
-	$errors = [];
-	
-	// VALIDATE EMAIL
-	if(!filter_var($contactEmail, FILTER_VALIDATE_EMAIL))
-	{
-		$errors[] = 'Invalid email format.';
-	}
-	
-	// CHECK FOR ERRORS
-	if(!empty($errors))
-	{
-		$_SESSION['message'] = implode('<br>', $errors);
-		$_SESSION['messageType'] = 'error';
-		header($HEADERLOCATION);
-		exit();	
-	}
-	
-	// PROCESS FORM 
-	try 
-	{
-                // Map POST values to the keys expected by handle_contact_submission()
-                // forms.php expects:
-                //   contactFirstName, contactLastName, contactEmail, phone,
-                //   phoneType, currentOrganization, yearAttended
-		$payload = [
-        'contactFirstName' => trim((string)($_POST['contactFirstName'] ?? '')),
-        'contactLastName'  => trim((string)($_POST['contactLastName'] ?? '')),
-        'contactEmail'     => trim((string)($_POST['contactEmail'] ?? '')),
-        'contactPhone'     => trim((string)($_POST['contactPhone'] ?? '')),
-        'contactPhoneType' => trim((string)($_POST['contactPhoneType'] ?? '')),
-        // HTML name="currentOrganization" → expected key "currentOrganization"
-        'currentOrganization'      => trim((string)($_POST['currentOrganization'] ?? '')),
-        'yearAttended'     => trim((string)($_POST['yearAttended'] ?? '')),
-		];
-		
-		// This will:
-		//  - sanitize the payload
-		//  - validate required fields + email
-		//  - append a row to the contact Google Sheet
-		//  - send an email notification
-                handle_contact_submission($config, $payload, $logger);
-		
-		// SUCCESS MESSAGE	
-		$_SESSION['message'] = 'Updated contact information submitted successfully! Thank you.';
-		$_SESSION['messageType'] = 'success';
-		
-	} 
-	catch (InvalidArgumentException $e) 
-	{
-		// Validation error (missing field, invalid email, etc.)
-		$_SESSION['message'] = $e->getMessage();
-		$_SESSION['messageType'] = 'error';
-	} 
-        catch (Throwable $e) // Any other unexpected error (Sheets / Gmail / config issues, etc.)
-        {
-                if ($logger instanceof AppLogger) {
-                        $logger->error('Contact form submission failed', [
-                                'error' => $e->getMessage(),
-                        ]);
-                }
+$HEADERLOCATION = 'Location: contact.php#contactStatus';
 
-                $_SESSION['message'] = 'There was a problem submitting the form. Please try again later.';
-                $_SESSION['messageType'] = 'error';
-        }
-	
-	// Redirect back to contact.php with status anchor
-	header($HEADERLOCATION);
-	exit();	
-?>
+/**
+ * Store a flash message in the session and redirect back to the form anchor.
+ */
+function redirect_with_message(string $message, string $type, string $headerLocation): void
+{
+    $_SESSION['message']     = $message;
+    $_SESSION['messageType'] = $type;
+
+    header($headerLocation);
+    exit();
+}
+
+// Validate HTTP verb early so bots or misconfigured clients fail fast.
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    redirect_with_message('Invalid request method. Please use the form to submit data.', 'error', $HEADERLOCATION);
+}
+
+$requiredFields = [
+    'contactFirstName',
+    'contactLastName',
+    'contactEmail',
+    'phone',
+    'phoneType',
+    'yearAttended',
+];
+
+foreach ($requiredFields as $fieldName) {
+    if (!isset($_POST[$fieldName])) {
+        redirect_with_message('Invalid request parameters. One or more required form parameters is missing.', 'error', $HEADERLOCATION);
+    }
+}
+
+// Build the payload expected by handle_contact_submission() using sanitized inputs.
+$payload = [
+    'contactFirstName'    => filter_input(INPUT_POST, 'contactFirstName', FILTER_SANITIZE_SPECIAL_CHARS) ?: '',
+    'contactLastName'     => filter_input(INPUT_POST, 'contactLastName', FILTER_SANITIZE_SPECIAL_CHARS) ?: '',
+    'contactEmail'        => filter_input(INPUT_POST, 'contactEmail', FILTER_SANITIZE_EMAIL) ?: '',
+    'contactPhone'        => filter_input(INPUT_POST, 'phone', FILTER_SANITIZE_SPECIAL_CHARS) ?: '',
+    'contactPhoneType'    => filter_input(INPUT_POST, 'phoneType', FILTER_SANITIZE_SPECIAL_CHARS) ?: '',
+    'currentOrganization' => filter_input(INPUT_POST, 'currentOrganization', FILTER_SANITIZE_SPECIAL_CHARS) ?: '',
+    'yearAttended'        => filter_input(INPUT_POST, 'yearAttended', FILTER_SANITIZE_SPECIAL_CHARS) ?: '',
+];
+
+// Extra guardrail so we can trace failures in production logs.
+if ($logger instanceof AppLogger && $logger->isEnabled()) {
+    $logger->info('Contact form handler invoked', [
+        'request_id' => $logger->getRequestId(),
+        'payload_preview' => [
+            'first' => $payload['contactFirstName'],
+            'last' => $payload['contactLastName'],
+            'email' => $payload['contactEmail'],
+        ],
+    ]);
+}
+
+// Validate and process the form.
+try {
+    handle_contact_submission($config, $payload, $logger);
+
+    redirect_with_message('Updated contact information submitted successfully! Thank you.', 'success', $HEADERLOCATION);
+} catch (InvalidArgumentException $e) {
+    redirect_with_message($e->getMessage(), 'error', $HEADERLOCATION);
+} catch (Throwable $e) {
+    if ($logger instanceof AppLogger) {
+        $logger->error('Contact form submission failed', [
+            'request_id' => $logger->getRequestId(),
+            'error' => $e->getMessage(),
+        ]);
+    }
+
+    redirect_with_message('There was a problem submitting the form. Please try again later.', 'error', $HEADERLOCATION);
+}

@@ -2,10 +2,10 @@
     $container = require dirname(__DIR__) . '/app/bootstrap.php';
     $config = $container['config'];
     $logger = $container['logger'];
-
+    
     $pageTitle = 'Apply – The Luke Center';
     $activeNav = 'apply';
-
+    
     // Check for headers
     if (!headers_sent())
     {
@@ -39,6 +39,9 @@
                 <form id="applyForm" class="needs-validation" action="handleApplyForm.php" method="post">
                     <input type="text" class="d-none" tabindex="-1" autocomplete="off" data-honeypot>
                     <div class="row g-3">
+                        <div class="col-12 pt-2">
+                            <h2 class="h5 text-uppercase text-secondary">Personal Information</h2>
+                        </div>                             
                         <div class="col-md-6">
                             <label class="form-label" for="applicantFirstName">First Name *</label>
                             <input class="form-control" type="text" id="applicantFirstName" name="applicantFirstName" required>
@@ -54,7 +57,10 @@
                         <div class="col-md-6">
                             <label class="form-label" for="applicantPronouns">Pronouns</label>
                             <input class="form-control" type="text" id="applicantPronouns" name="applicantPronouns">
-                        </div>
+                        </div>                       
+                        <div class="col-12 pt-2">
+                            <h2 class="h5 text-uppercase text-secondary">Contact Information</h2>
+                        </div>                        
                         <div class="col-md-6">
                             <label class="form-label" for="applicantEmail">Email *</label>
                             <input class="form-control" type="email" id="applicantEmail" name="applicantEmail" required>
@@ -72,6 +78,9 @@
                                 <option value="Work">Work</option>
                             </select>
                         </div>
+                        <div class="col-12 pt-2">
+                            <h2 class="h5 text-uppercase text-secondary">Mailing Information</h2>
+                        </div>                        
                         <div class="col-md-6">
                             <label class="form-label" for="addressOne">Street Address *</label>
                             <input class="form-control" type="text" id="addressOne" name="addressOne" required>
@@ -98,6 +107,9 @@
                             <label class="form-label" for="zipCode">Zip / Postal Code *</label>
                             <input class="form-control" type="text" id="zipCode" name="zipCode" required>
                         </div>
+                        <div class="col-12 pt-2">
+                            <h2 class="h5 text-uppercase text-secondary">Other</h2>
+                        </div>                        
                         <div class="col-md-6">
                             <label class="form-label" for="vegan">Are you vegan? *</label>
                             <select class="form-select" id="vegan" name="vegan" required>
@@ -122,6 +134,9 @@
                             <label class="form-label" for="accessibilityNeeds">Accessibility needs</label>
                             <textarea class="form-control" id="accessibilityNeeds" name="accessibilityNeeds" rows="2"></textarea>
                         </div>
+                        <div class="col-12 pt-2">
+                            <h2 class="h5 text-uppercase text-secondary">Background Information</h2>
+                        </div>                          
                         <div class="col-md-6">
                             <label class="form-label" for="organiaztion">Organization / Agency *</label>
                             <input class="form-control" type="text" id="organiaztion" name="organiaztion" required>
@@ -142,37 +157,43 @@
                             <label class="form-label" for="sponsorPhone">Sponsor / Supervisor Phone *</label>
                             <input class="form-control" type="tel" id="sponsorPhone" name="sponsorPhone" required>
                         </div>
+                        <div class="col-12 pt-2">
+                            <h2 class="h5 text-uppercase text-secondary">Background Questions</h2>
+                        </div>                          
                         <div class="col-12">
-                            <label class="form-label" for="refferalQuestion">How did you learn about the Pacific Program? *</label>
-                            <textarea class="form-control" id="refferalQuestion" name="refferalQuestion" rows="3" required></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label" for="questionOne">Describe your leadership responsibilities *</label>
+                            <label class="form-label" for="questionOne">How did you learn about the Pacific Program? *</label>
                             <textarea class="form-control" id="questionOne" name="questionOne" rows="3" required></textarea>
                         </div>
                         <div class="col-12">
-                            <label class="form-label" for="questionTwo">Describe your experience working across sectors *</label>
+                            <label class="form-label" for="questionTwo">Describe your leadership responsibilities *</label>
                             <textarea class="form-control" id="questionTwo" name="questionTwo" rows="3" required></textarea>
                         </div>
                         <div class="col-12">
-                            <label class="form-label" for="questionThree">Describe a professional challenge you'd like to discuss *</label>
+                            <label class="form-label" for="questionThree">Describe your experience working across sectors *</label>
                             <textarea class="form-control" id="questionThree" name="questionThree" rows="3" required></textarea>
                         </div>
                         <div class="col-12">
-                            <label class="form-label" for="questionFour">How will the program support your goals? *</label>
+                            <label class="form-label" for="questionFour">Describe a professional challenge you'd like to discuss *</label>
                             <textarea class="form-control" id="questionFour" name="questionFour" rows="3" required></textarea>
                         </div>
+                        <div class="col-12">
+                            <label class="form-label" for="questionFive">How will the program support your goals? *</label>
+                            <textarea class="form-control" id="questionFive" name="questionFive" rows="3" required></textarea>
+                        </div>
+                        <div class="col-12 pt-2">
+                            <h2 class="h5 text-uppercase text-secondary">Scholarship Information</h2>
+                        </div>                          
                         <div class="col-md-6">
-                            <label class="form-label" for="partialScholarship">Will a partial scholarship impact your ability to attend?</label>
-                            <select class="form-select" id="partialScholarship" name="partialScholarship" required>
+                            <label class="form-label" for="scholarshipQuestion">Will a partial scholarship impact your ability to attend?</label>
+                            <select class="form-select" id="scholarshipQuestion" name="scholarshipQuestion" required>
                                 <option value="" selected disabled>Select an option</option>
                                 <option value="Yes">Yes</option>
                                 <option value="No">No</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label" for="assistAmount">What amount of financial assistance are you requesting?</label>
-                            <input class="form-control" type="text" id="assistAmount" name="assistAmount">
+                            <label class="form-label" for="scholarshipAmount">What amount of financial assistance are you requesting?</label>
+                            <input class="form-control" type="text" id="scholarshipAmount" name="scholarshipAmount">
                         </div>
                     </div>
                     <div class="d-grid d-sm-flex gap-3 mt-4">

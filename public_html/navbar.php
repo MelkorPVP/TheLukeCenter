@@ -18,7 +18,6 @@
                         <li class="nav-item"><a class="nav-link" href="/board.php">Board of Directors</a></li>
                         <li class="nav-item"><a class="nav-link" href="/apply.php">Apply</a></li>
                         <li class="nav-item"><a class="nav-link" href="/contact.php">Contact</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" data-developer-login>Administration</a></li>
                 </ul>
         </div>
 </nav>

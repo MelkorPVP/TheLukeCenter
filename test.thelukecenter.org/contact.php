@@ -52,11 +52,11 @@
                             <input class="form-control" type="email" id="contactEmail" name="contactEmail" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label" for="phone">Phone *</label>
+                            <label class="form-label" id="phoneLabel" for="phone" >Phone *</label>
                             <input class="form-control" type="tel" id="phone" name="phone" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label" for="phoneType">Phone Type *</label>
+                            <label class="form-label" id="phoneTypeLabel" for="phoneType">Phone Type *</label>
                             <select class="form-select" id="phoneType" name="phoneType" required>
                                 <option value="" selected disabled>Select...</option>
                                 <option value="Mobile">Mobile</option>

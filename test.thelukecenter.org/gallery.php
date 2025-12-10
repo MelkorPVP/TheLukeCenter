@@ -35,8 +35,7 @@
                     id="galleryImage"
                     class="lc-gallery-img"
                     src=""
-                    alt="Gallery image"
-                    loading="lazy"
+                    alt="Gallery image"                   
                     >
                     
                     <button

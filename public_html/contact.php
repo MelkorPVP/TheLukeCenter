@@ -14,8 +14,7 @@
         header('Expires: 0');
     }
     
-    // Prepare CSRF token and message(s)
-    $csrfToken = $_SESSION['csrf_token'] ?? '';
+    // Prepair message(s)
     $message = $_SESSION['message'] ?? '';
     $messageType = $_SESSION['messageType'] ?? ''; // 'success' | 'error'
     unset($_SESSION['message'], $_SESSION['messageType']); // one-time
@@ -39,7 +38,6 @@
                 <p class="mb-4">Alumni and friends of The Luke Center, please share your current contact details so we can keep you informed about upcoming gatherings, volunteer opportunities, and Pacific Program updates.</p>
                 <form id="contactForm" class="needs-validation" action="handleContactForm.php" method="post">
                     <input type="text" class="d-none" tabindex="-1" autocomplete="off" data-honeypot>
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label" for="contactFirstName">First Name *</label>
@@ -54,12 +52,12 @@
                             <input class="form-control" type="email" id="contactEmail" name="contactEmail" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label" for="contactPhone">Phone *</label>
-                            <input class="form-control" type="tel" id="contactPhone" name="contactPhone" required>
+                            <label class="form-label" id="phoneLabel" for="phone" >Phone *</label>
+                            <input class="form-control" type="tel" id="phone" name="phone" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label" for="contactPhoneType">Phone Type *</label>
-                            <select class="form-select" id="contactPhoneType" name="contactPhoneType" required>
+                            <label class="form-label" id="phoneTypeLabel" for="phoneType">Phone Type *</label>
+                            <select class="form-select" id="phoneType" name="phoneType" required>
                                 <option value="" selected disabled>Select...</option>
                                 <option value="Mobile">Mobile</option>
                                 <option value="Home">Home</option>

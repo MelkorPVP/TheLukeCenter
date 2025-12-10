@@ -1,5 +1,5 @@
 /*--------------- 
-BEGIN MAIN THEME STYLE RULES (LUKE CENTER BRAND PALLETE)
+    BEGIN MAIN THEME STYLE RULES (LUKE CENTER BRAND PALLETE)
 ---------------*/
 :root
 {
@@ -33,7 +33,7 @@ BEGIN MAIN THEME STYLE RULES (LUKE CENTER BRAND PALLETE)
 
 .section-accent
 {
-    background:var(--accent-bg)
+    background:var(--accent-bg);    padding: 8px;    
 }
 
 .hero
@@ -46,11 +46,11 @@ BEGIN MAIN THEME STYLE RULES (LUKE CENTER BRAND PALLETE)
     color:#0b2a22
 }
 /*--------------- 
-END MAIN THEME STYLE RULES 
+    END MAIN THEME STYLE RULES 
 ---------------*/
 
 /*--------------- 
-BEGIN H1-H6 STYLE RULES 
+    BEGIN H1-H6 STYLE RULES 
 ---------------*/
 .letter-wide
 {
@@ -62,11 +62,11 @@ BEGIN H1-H6 STYLE RULES
     color:var(--brand-700) !important
 }
 /*--------------- 
-END H1-H6 STYLE RULES 
+    END H1-H6 STYLE RULES 
 ---------------*/
 
 /*--------------- 
-BEGIN HEADER & NAVBAR RULES 
+    BEGIN HEADER & NAVBAR RULES 
 ---------------*/
 .site-header .navbar-brand
 {
@@ -95,11 +95,11 @@ BEGIN HEADER & NAVBAR RULES
     color:#0d3429;
 }
 /*--------------- 
-END HEADER & NAVBAR RULES 
+    END HEADER & NAVBAR RULES 
 ---------------*/
 
 /*--------------- 
-BEGIN FOOTER RULES 
+    BEGIN FOOTER RULES 
 ---------------*/
 footer a
 {
@@ -111,11 +111,11 @@ footer a:hover
     text-decoration:underline
 }
 /*--------------- 
-END FOOTER RULES 
+    END FOOTER RULES 
 ---------------*/
 
 /*--------------- 
-BEGIN IMAGE RULES 
+    BEGIN IMAGE RULES 
 ---------------*/
 
 #logo-image
@@ -125,13 +125,13 @@ BEGIN IMAGE RULES
 }
 
 /*--------------- 
-END IMAGE RULES 
+    END IMAGE RULES 
 ---------------*/
 
 
 
 /*----- 
-BEGIN MISC RULES 
+    BEGIN MISC RULES 
 -----*/
 
 /* Small Grey Text */
@@ -148,6 +148,83 @@ BEGIN MISC RULES
     object-fit:cover;
     max-height:480px;
 }
+
+/* Bootstrap Icon Rules */
+.bi-lock
+{
+    float: right;
+}
 /*--------------- 
-END MISC RULES 
+    END MISC RULES 
+---------------*/
+
+/*---------------
+    BEGIN GALLERY RULES
+---------------*/
+
+.lc-gallery
+{
+    border-radius: 1rem;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #e6efe9;
+}
+
+.lc-gallery-frame
+{
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #f7faf9;
+}
+
+.lc-gallery-img
+{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.lc-gallery-arrow
+{
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.85);
+    color: #0d3429;
+    font-size: 1.5rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.lc-gallery-arrow:hover
+{
+    background: rgba(255,255,255,1);
+}
+
+.lc-gallery-prev
+{
+    left: .75rem;
+}
+
+.lc-gallery-next
+{
+    right: .75rem;
+}
+
+.lc-testimonial
+{
+    min-height: 3.5rem;
+}
+
+/*---------------
+    END GALLERY RULES
 ---------------*/

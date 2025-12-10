@@ -33,7 +33,7 @@
 
 .section-accent
 {
-    background:var(--accent-bg)
+    background:var(--accent-bg);    padding: 8px;    
 }
 
 .hero
@@ -147,6 +147,12 @@ footer a:hover
 {
     object-fit:cover;
     max-height:480px;
+}
+
+/* Bootstrap Icon Rules */
+.bi-lock
+{
+    float: right;
 }
 /*--------------- 
     END MISC RULES 
