@@ -152,27 +152,17 @@ function developer_current_env_flags(): array
 }
 
 /**
- * @return array{copied:int,files:array<int,string>}
+ * Recursively copy all files and directories from one root to another.
+ *
+ * @return array<int,string> list of relative paths copied
  */
-function developer_copy_overlay(string $sourceEnv, string $destinationEnv, ?AppLogger $logger = null): array
+function developer_recursive_copy_directory(string $sourceDir, string $destinationDir): array
 {
-    $sourceDir = app_public_root($sourceEnv);
-    $destinationDir = app_public_root($destinationEnv);
-
-    if (!is_dir($sourceDir)) {
-        throw new RuntimeException(sprintf('Source site root %s is missing', $sourceDir));
-    }
-
-    if (!is_dir($destinationDir)) {
-        mkdir($destinationDir, 0755, true);
-    }
-
     $iterator = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($sourceDir, RecursiveDirectoryIterator::SKIP_DOTS),
         RecursiveIteratorIterator::SELF_FIRST
     );
 
-    $copied = 0;
     $files = [];
 
     foreach ($iterator as $item) {
@@ -192,9 +182,98 @@ function developer_copy_overlay(string $sourceEnv, string $destinationEnv, ?AppL
         }
 
         copy($item->getPathname(), $targetPath);
-        $copied++;
         $files[] = $relativePath;
     }
+
+    return $files;
+}
+
+/**
+ * Remove a directory and all of its contents.
+ */
+function developer_clear_directory(string $targetDir): int
+{
+    if (!is_dir($targetDir)) {
+        return 0;
+    }
+
+    $removed = 0;
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($targetDir, RecursiveDirectoryIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::CHILD_FIRST
+    );
+
+    foreach ($iterator as $item) {
+        /** @var SplFileInfo $item */
+        if ($item->isDir()) {
+            rmdir($item->getPathname());
+        } else {
+            unlink($item->getPathname());
+        }
+        $removed++;
+    }
+
+    rmdir($targetDir);
+
+    return $removed + 1; // include the root directory removal
+}
+
+/**
+ * @return array{copied:int,files:array<int,string>,backup_path:string}
+ */
+function developer_copy_overlay(string $sourceEnv, string $destinationEnv, ?AppLogger $logger = null): array
+{
+    $sourceDir = app_public_root($sourceEnv);
+    $destinationDir = app_public_root($destinationEnv);
+
+    if (!is_dir($destinationDir)) {
+        mkdir($destinationDir, 0755, true);
+    }
+
+    $timestamp = (new DateTimeImmutable())->format('YmdHis');
+    $backupRoot = (defined('APP_ROOT') ? APP_ROOT : dirname(__DIR__, 2)) . '/Backups';
+    $backupDir = $backupRoot . DIRECTORY_SEPARATOR . $destinationEnv . '-' . $timestamp;
+
+    if (!is_dir($backupRoot)) {
+        mkdir($backupRoot, 0755, true);
+    }
+
+    if (!is_dir($backupDir)) {
+        mkdir($backupDir, 0755, true);
+    }
+
+    $backedUpFiles = developer_recursive_copy_directory($destinationDir, $backupDir);
+
+    if ($logger instanceof AppLogger && $logger->isEnabled()) {
+        $logger->info('Destination snapshot created', [
+            'environment' => $destinationEnv,
+            'destination_root' => $destinationDir,
+            'backup_path' => $backupDir,
+            'backed_up_files' => $backedUpFiles,
+            'backed_up_count' => count($backedUpFiles),
+        ]);
+    }
+
+    if (!is_dir($sourceDir)) {
+        throw new RuntimeException(sprintf('Source site root %s is missing', $sourceDir));
+    }
+
+    $removedEntries = developer_clear_directory($destinationDir);
+
+    if (!is_dir($destinationDir)) {
+        mkdir($destinationDir, 0755, true);
+    }
+
+    if ($logger instanceof AppLogger && $logger->isEnabled()) {
+        $logger->info('Destination directory reset', [
+            'environment' => $destinationEnv,
+            'destination_root' => $destinationDir,
+            'removed_entries' => $removedEntries,
+        ]);
+    }
+
+    $files = developer_recursive_copy_directory($sourceDir, $destinationDir);
+    $copied = count($files);
 
     if ($logger instanceof AppLogger && $logger->isEnabled()) {
         $logger->info('Site sync completed', [
@@ -203,10 +282,11 @@ function developer_copy_overlay(string $sourceEnv, string $destinationEnv, ?AppL
             'source_root' => $sourceDir,
             'destination_root' => $destinationDir,
             'files' => $files,
+            'backup_path' => $backupDir,
         ]);
     }
 
-    return ['copied' => $copied, 'files' => $files];
+    return ['copied' => $copied, 'files' => $files, 'backup_path' => $backupDir];
 }
 
 /**
