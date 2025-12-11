@@ -193,14 +193,25 @@ function initializeGalleryRotator()
 	
 	const imageIntervalMs = 5500;	// 5.5 seconds
 	const idleResumeMs    = 54500; // resume time is 54.5 seconds + imageInterval of 5.5 Seconds
+        const gallerySizes    = "(min-width: 1200px) 1100px, (min-width: 992px) 900px, (min-width: 768px) 700px, 90vw";
 	
-	// Reusable 1px transparent gif so we never render the broken-image icon.	
-	const fallbackImage = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';	
-	
-	// NEW: session storage key (allow override if you ever need it)
-	const storageKey =
-	root.getAttribute('data-gallery-storage-key') ||
-	'lc_gallery_index';
+        // Reusable 1px transparent gif so we never render the broken-image icon.
+        const fallbackImage = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+
+        // Off-screen image to prefetch the next gallery item.
+        const prefetchImg = new Image();
+        prefetchImg.decoding = 'async';
+        prefetchImg.loading = 'lazy';
+        let prefetchedTargetId = '';
+        prefetchImg.addEventListener('error', () =>
+        {
+                if (prefetchedTargetId) failedImageIds.add(prefetchedTargetId);
+        });
+
+        // NEW: session storage key (allow override if you ever need it)
+        const storageKey =
+        root.getAttribute('data-gallery-storage-key') ||
+        'lc_gallery_index';
 	
 	const readStoredIndex = () =>
 	{
@@ -221,19 +232,60 @@ function initializeGalleryRotator()
 	};
 	
 	
-	let images = [];	
-	
-	// Track images that failed to load so we can skip them on rotation and avoid an infinite loop.	
-	const failedImageIds = new Set();	
-	
-	let imageIndex = 0;	
-	
-	let imageTimer  = null;	
-	let resumeTimer = null;	
-	
-	const setImage = (index) =>	
-	{		
-		if (!images.length) return;		
+        let images = [];
+
+        // Track images that failed to load so we can skip them on rotation and avoid an infinite loop.
+        const failedImageIds = new Set();
+
+        let imageIndex = 0;
+
+        let imageTimer  = null;
+        let resumeTimer = null;
+
+        const buildImageVariants = (item) =>
+        {
+                const widths = [400, 800, 1200];
+                const id     = item.id || '';
+                const url    = item.url || '';
+
+                const buildUrlForWidth = (width) =>
+                {
+                        if (id) return `https://lh3.googleusercontent.com/d/${id}=w${width}`;
+                        if (url.includes('=w')) return url.replace(/=w\d+/, `=w${width}`);
+                        return url;
+                };
+
+                const srcset = widths
+                .map((width) =>
+                        {
+                                const candidate = buildUrlForWidth(width);
+                                return candidate ? `${candidate} ${width}w` : '';
+                        })
+                .filter(Boolean)
+                .join(', ');
+
+                const src = buildUrlForWidth(1200) || url || fallbackImage;
+
+                return { src, srcset, key: id || url || src };
+        };
+
+        const prefetchNextImage = () =>
+        {
+                if (!images.length) return;
+
+                const targetIndex = (imageIndex + 1) % images.length;
+                const nextItem    = images[targetIndex];
+                const variants    = buildImageVariants(nextItem);
+
+                prefetchedTargetId = variants.key;
+                prefetchImg.srcset = variants.srcset;
+                prefetchImg.sizes  = gallerySizes;
+                prefetchImg.src    = variants.src;
+        };
+
+        const setImage = (index) =>
+        {
+                if (!images.length) return;
 		
 		// Skip any URLs that failed previously.		
 		let nextIndex = (index + images.length) % images.length;		
@@ -244,16 +296,32 @@ function initializeGalleryRotator()
 			guard += 1;			
 		}		
 		
-		imageIndex = nextIndex;
-		
-		persistIndex(imageIndex); // NEW: save on every successful set
-		
+                imageIndex = nextIndex;
+
+                persistIndex(imageIndex); // NEW: save on every successful set
+
                 const item = images[imageIndex];
 
+                const prefetchedMatch = (prefetchedTargetId && prefetchedTargetId === (item.id || item.url))
+                        ? {
+                                src: prefetchImg.currentSrc || prefetchImg.src,
+                                srcset: prefetchImg.srcset,
+                                key: prefetchedTargetId,
+                        }
+                        : null;
+
+                const variants = (prefetchedMatch && prefetchedMatch.src)
+                        ? prefetchedMatch
+                        : buildImageVariants(item);
+
                 imgEl.dataset.imageId = item.id || item.url;
-                imgEl.src = item.url;
+                imgEl.srcset = variants.srcset;
+                imgEl.sizes  = gallerySizes;
+                imgEl.src = variants.src;
                 imgEl.alt = item.name || 'Gallery image';
                 logger.debug('initializeGalleryRotator: set image', { index: imageIndex, id: imgEl.dataset.imageId });
+
+                prefetchNextImage();
         };
 	
 	const nextImage = () => setImage(imageIndex + 1);	
@@ -335,13 +403,14 @@ function initializeGalleryRotator()
 					const failedId = imgEl.dataset.imageId || imgEl.src;						
 					if (failedId) failedImageIds.add(failedId);						
 					
-                                        if (failedImageIds.size >= images.length)
-                                        {
-                                                imgEl.src = fallbackImage;
-                                                imgEl.alt = 'Unable to load gallery images';
-                                                stopImageAuto();
-                                                return;
-                                        }
+                        if (failedImageIds.size >= images.length)
+                        {
+                                imgEl.src = fallbackImage;
+                                imgEl.srcset = '';
+                                imgEl.alt = 'Unable to load gallery images';
+                                stopImageAuto();
+                                return;
+                        }
 
                                         manualAdvance(nextImage);
                                         logger.debug('initializeGalleryRotator: image failed, advancing', imgEl.dataset.imageId);

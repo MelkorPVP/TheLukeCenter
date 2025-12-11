@@ -35,7 +35,11 @@
                     id="galleryImage"
                     class="lc-gallery-img"
                     src=""
-                    alt="Gallery image"                   
+                    srcset=""
+                    sizes="(min-width: 1200px) 1100px, (min-width: 992px) 900px, (min-width: 768px) 700px, 90vw"
+                    loading="lazy"
+                    decoding="async"
+                    alt="Gallery image"
                     >
                     
                     <button
