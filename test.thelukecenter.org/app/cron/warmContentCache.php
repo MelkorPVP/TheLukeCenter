@@ -74,54 +74,52 @@ if ($bootstrapLogger->isEnabled()) {
 }
 
 $exitCode = 0;
-$environments = [APP_ENV_PROD, APP_ENV_TEST];
+$environment = APP_ENVIRONMENT; // Cron executes within a single document root, so processing only the detected environment avoids cross-environment cache writes.
 
-foreach ($environments as $environment) {
-    $envConfig = app_build_configuration($environment);
-    $envLogger = app_logger_from_config($loggingConfig, $environment, $sharedWriter);
+$envConfig = app_build_configuration($environment);
+$envLogger = app_logger_from_config($loggingConfig, $environment, $sharedWriter);
 
-    try {
-        // Each environment refreshes independently so cache issues remain isolated.
-        $envLogger->info('Starting content cache warmup', [
+try {
+    // Each environment refreshes independently so cache issues remain isolated.
+    $envLogger->info('Starting content cache warmup', [
+        'environment' => $environment,
+    ]);
+
+    $payload = site_content_fetch_payload($envConfig, $envLogger);
+    site_content_save_cache($envConfig, $payload, $envLogger);
+
+    $valuesCount = is_array($payload['values'] ?? null) ? count($payload['values']) : 0;
+    $testimonialsCount = is_array($payload['testimonials'] ?? null) ? count($payload['testimonials']) : 0;
+    $imagesCount = is_array($payload['programImages'] ?? null) ? count($payload['programImages']) : 0;
+    $alumniImagesCount = is_array($payload['alumniImages'] ?? null) ? count($payload['alumniImages']) : 0;
+
+    $generatedAtRaw = $payload['generated_at'] ?? null;
+    $generatedAt = is_numeric($generatedAtRaw)
+        ? date('c', (int) $generatedAtRaw)
+        : (string) ($generatedAtRaw ?? '');
+
+    $envLogger->info('Content cache ready', [
+        'environment' => $environment,
+        'values_count' => $valuesCount,
+        'testimonials_count' => $testimonialsCount,
+        'images_count' => $imagesCount,
+        'alumni_images_count' => $alumniImagesCount,
+        'generated_at' => $generatedAt,
+    ]);
+} catch (Throwable $e) {
+    if ($envLogger->isEnabled()) {
+        $envLogger->error('Content cache warmup failed', [
             'environment' => $environment,
+            'exception' => get_class($e),
+            'code' => $e->getCode(),
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
         ]);
-
-        $payload = site_content_fetch_payload($envConfig, $envLogger);
-        site_content_save_cache($envConfig, $payload, $envLogger);
-
-        $valuesCount = is_array($payload['values'] ?? null) ? count($payload['values']) : 0;
-        $testimonialsCount = is_array($payload['testimonials'] ?? null) ? count($payload['testimonials']) : 0;
-        $imagesCount = is_array($payload['programImages'] ?? null) ? count($payload['programImages']) : 0;
-        $alumniImagesCount = is_array($payload['alumniImages'] ?? null) ? count($payload['alumniImages']) : 0;
-
-        $generatedAtRaw = $payload['generated_at'] ?? null;
-        $generatedAt = is_numeric($generatedAtRaw)
-            ? date('c', (int) $generatedAtRaw)
-            : (string) ($generatedAtRaw ?? '');
-
-        $envLogger->info('Content cache ready', [
-            'environment' => $environment,
-            'values_count' => $valuesCount,
-            'testimonials_count' => $testimonialsCount,
-            'images_count' => $imagesCount,
-            'alumni_images_count' => $alumniImagesCount,
-            'generated_at' => $generatedAt,
-        ]);
-    } catch (Throwable $e) {
-        if ($envLogger->isEnabled()) {
-            $envLogger->error('Content cache warmup failed', [
-                'environment' => $environment,
-                'exception' => get_class($e),
-                'code' => $e->getCode(),
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-        }
-
-        $exitCode = 1;
     }
+
+    $exitCode = 1;
 }
 
 exit($exitCode);
