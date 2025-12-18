@@ -10,20 +10,26 @@ declare(strict_types=1);
 
 // --- START: Cron Environment Fixer ---
 
-// Mock the minimal web context expected by OAuth libraries when running via cron.
-$_SERVER['DOCUMENT_ROOT'] = '/home1/bnrortmy/public_html';
-$_SERVER['HTTP_HOST'] = 'www.thelukecenter.org'; // Adjust if your domain is different
+// Identify whether the cron script lives in the production or test tree so we can configure paths dynamically.
+$scriptRoot = realpath(dirname(__DIR__, 2));
+$rootName = $scriptRoot !== false ? basename($scriptRoot) : '';
+
+// Choose the document root and host based on the detected tree; fall back to production-friendly defaults.
+$_SERVER['DOCUMENT_ROOT'] = $scriptRoot ?: '/home1/bnrortmy/public_html';
+$_SERVER['HTTP_HOST'] = $rootName === 'test.thelukecenter.org'
+    ? 'test.thelukecenter.org'
+    : 'www.thelukecenter.org';
 $_SERVER['SERVER_NAME'] = $_SERVER['HTTP_HOST'];
 $_SERVER['REQUEST_URI'] = '/';
 $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 
-// Align working directory with the web root so relative paths match production requests.
+// Align working directory with the detected web root so relative paths match production requests.
 if (is_dir($_SERVER['DOCUMENT_ROOT'])) {
     chdir($_SERVER['DOCUMENT_ROOT']);
 }
 
-// Load environment overrides from .htaccess so API credentials are available to the cron job.
-$htaccessPath = '/home1/bnrortmy/.htaccess';
+// Load environment overrides from the account-level .htaccess so API credentials are available to the cron job.
+$htaccessPath = realpath($_SERVER['DOCUMENT_ROOT'] . '/../.htaccess') ?: '/home1/bnrortmy/.htaccess';
 if (file_exists($htaccessPath)) {
     $lines = file($htaccessPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
