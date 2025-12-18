@@ -1,11 +1,11 @@
 <?php        
-    $container = require dirname(__DIR__) . '/app/bootstrap.php';        
+    $container = require_once __DIR__ . '/app/bootstrap.php';          
     $config = $container['config'];        
     $logger = $container['logger'];        
-        
+    
     $pageTitle = 'Pacific Program – The Luke Center';        
     $activeNav = 'pacific';        
-        
+    
     // Insert HTML header.        
     require app_public_path('header.php', APP_ENVIRONMENT);    
 ?>
@@ -24,8 +24,18 @@
                 <p>You'll become a member of an influential association of alumni (Coyotes) and cohorts who share a special, career-defining bond across decades of specialized instruction. Availability is limited, register soon to ensure your place in the program.</p>                                
                 <div class="row g-4 align-items-stretch mt-1">                                        
                     <div class="col-12 col-md-7 mx-auto">                                                
-                        <div class="card h-100 shadow-sm">                                                        
-                            <div                                                        id="galleryRoot"                                                        class="lc-gallery"                                                        data-gallery-endpoint="/galleryData.php"                                                        >                                                                <div class="lc-gallery-frame">                                                                        <img                                                                        id="galleryImage"                                                                        class="lc-gallery-img"                                                                        src=""                                                                        alt="Gallery image"                                                                                           >                                                                                                                                                <button                                                                        id="galleryPrev"                                                                        type="button"                                                                        class="lc-gallery-arrow lc-gallery-prev"                                                                        aria-label="Previous image"                                                                        >                                                                                &#8249;                                                                            </button>                                                                                                                                                <button                                                                        id="galleryNext"                                                                        type="button"                                                                        class="lc-gallery-arrow lc-gallery-next"                                                                        aria-label="Next image"                                                                        >                                                                                &#8250;                                                                            </button>                                                                    </div>                                                            </div>                                                                               
+                        <div class="card h-100 border-0">                                                        
+                            <div id="galleryRoot" class="lc-gallery" data-gallery-endpoint="/handleProgramGalleryData.php">
+                                <div class="lc-gallery-frame">
+                                    <img id="galleryImage" class="lc-gallery-img" src="" alt="Gallery image">
+                                    <button id="galleryPrev" type="button" class="lc-gallery-arrow lc-gallery-prev" aria-label="Previous image">
+                                        &#8249;
+                                    </button>
+                                    <button id="galleryNext" type="button" class="lc-gallery-arrow lc-gallery-next" aria-label="Next image">
+                                        &#8250;
+                                    </button>
+                                </div>
+                            </div>
                             <div class="card-body">                                                                
                                 <!--                                                                        
                                     <h3 class="h5 text-brand mb-1">The Pacific Program</h3>                                                                        
@@ -34,15 +44,17 @@
                                     <a class="btn btn-brand me-2 mb-1" href="/apply.php" data-application-button>Apply Now</a>                                                                        
                                     <a class="btn btn-outline-brand mb-1" href="/catalyticLeadership.php">Explore Catalytic Leadership</a>                                                                        
                                 -->                                                                
-                                <h3 class="h5 text-brand mb-1"><?= htmlspecialchars($programName, ENT_QUOTES) ?></h3>                                                                
-                                <p class="mb-1 fw-semibold text-secondary"><?= htmlspecialchars($programLocation, ENT_QUOTES) ?></p>                                                                
-                                <p class="mb-3"><?= htmlspecialchars($programDates, ENT_QUOTES) ?></p>                                                                
-                                <a class="btn btn-brand me-2" href="/apply.php" data-application-button <?= $applicationOpen ? '' : 'disabled' ?>>Apply Now</a>                                                                                                
+                                <h3 class="h5 text-brand mb-1 text-center"><?= htmlspecialchars($programName, ENT_QUOTES) ?></h3>                                                                
+                                <p class="mb-1 fw-semibold text-center text-secondary"><?= htmlspecialchars($programLocation, ENT_QUOTES) ?></p>                                                                
+                                <p class="mb-3 text-center"><?= htmlspecialchars($programDates, ENT_QUOTES) ?></p> 
+                                <div class="text-center">
+                                    <a class="btn btn-brand me-2" href="/apply.php" data-application-button <?= $applicationOpen ? '' : 'disabled' ?>>Apply Now</a>
+                                </div>
                             </div>                                                        
                         </div>                                                
                     </div>                                        
                     <div class="col-12 col-md-5 d-flex">                                                
-                        <div class="card h-100 shadow-sm flex-fill">                                                        
+                        <div class="card h-100 flex-fill border-0">                                                        
                             <div class="card-body">                                                                
                                 <h4 class="h5 text-center mb-2">What You'll Learn</h4>                                                                
                                 <ul class="mb-3">                                                                        

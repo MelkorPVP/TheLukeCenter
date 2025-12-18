@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require dirname(__DIR__) . '/app/bootstrap.php';
+require_once __DIR__ . '/app/bootstrap.php';
 
 header('Content-Type: application/json');
 

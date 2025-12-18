@@ -1,11 +1,11 @@
 <?php
-    $container = require dirname(__DIR__) . '/app/bootstrap.php';
+    $container = require_once __DIR__ . '/app/bootstrap.php';
     $config = $container['config'];
     $logger = $container['logger'];
-
+    
     $pageTitle = 'Alumni – The Luke Center';
     $activeNav = 'alumni';
-
+    
     // Insert HTML header.
     require app_public_path('header.php', APP_ENVIRONMENT);
 ?>
@@ -23,57 +23,40 @@
                     <p>For over 30 years, the transformative teachings of The Pacific Program has been moving and growing the skills and passion of leaders. Each cohort, a unique and diverse community, developing connections and friendships that last for many years.</p>
                     <p>As the Luke Center creates new opportunities to reconnect and recharge catalytic energy with alumni, we'll post upcoming events and information here.</p>
                 </div>               
-                <div class="row g-4 mt-1">
-                    <div class="col-12 col-md-6">
+                <div class="row g-4 align-items-stretch mt-1">
+                    <div class="col-12 col-md-5 d-flex"> 
                         <!-- IMAGE 1 TOP LEFT -->
-                        <div class="card h-100 shadow-sm">
+                        <div class="card h-100 border-0">
                             <div class="ratio ratio-4x3 overflow-hidden">
-                                <img class="w-100 h-100 d-block object-fit-cover" src="/images/contactUpdate.png" alt="Image of howling coyote.">
+                                <img class="w-100 h-100 d-block object-fit-cover rounded-3" src="/images/contactUpdate.png" alt="Image of howling coyote.">
                             </div>
-                            <div class="card-body">
-                                <h3 class="h5 text-brand text-center">Update Your Contact Information</h3>
+                            <div class="card-body text-center">
+                                <h3 class="h5 text-brand">Update Your Contact Information</h3>
                                 <p class="mb-3">Ensure you receive alumni updates and invitations to upcoming events.</p>
                                 <a class="btn btn-brand" href="/contact.php">Share Your Info</a>
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-6">
-                        <!-- IMAGE 2 TOP RIGHT -->
-                        <div class="card h-100 shadow-sm">
-                            <div class="ratio ratio-4x3 overflow-hidden">
-                                <img class="w-100 h-100 d-block object-fit-cover" src="/images/alumni2022.png" alt="Image of the class of 2022.">
+                    <div class="col-12 col-md-7 mx-auto">
+                        <div class="card h-100 border-0">
+                            <!-- IMAGE 2 TOP RIGHT -->
+                            <div id="alumniRoot" class="lc-gallery" data-alumni-endpoint="/handleAlumniGalleryData.php">
+                                <div class="lc-gallery-frame">
+                                    <img id="alumniImage" class="lc-gallery-img" src="" alt="Alumni image">
+                                    <button id="alumniPrev" type="button" class="lc-gallery-arrow lc-gallery-prev" aria-label="Previous image">
+                                        &#8249;
+                                    </button>
+                                    <button id="alumniNext" type="button" class="lc-gallery-arrow lc-gallery-next" aria-label="Next image">
+                                        &#8250;
+                                    </button>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <h3 class="h5 text-brand text-center">Class of 2022</h3>
-                            </div>
-                        </div>                
-                    </div>            
-                </div>
-                <div class="row g-4 mt-1">
-                    <div class="col-12 col-md-6">
-                        <!-- IMAGE 3 BOTTOM LEFT -->
-                        <div class="card h-100 shadow-sm">
-                            <div class="ratio ratio-4x3 overflow-hidden">
-                                <img class="w-100 h-100 d-block object-fit-cover" src="/images/alumni1995.png" alt="Image of the class of 1995.">
-                            </div>
-                            <div class="card-body">
-                                <h3 class="h5 text-brand text-center">Class of 1995</h3>
-                                <!--<p class="mb-3 text-center">Class of 1995</p>-->
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <!-- IMAGE 4 BOTTOM RIGHT -->
-                        <div class="card h-100 shadow-sm">
-                            <div class="ratio ratio-4x3 overflow-hidden">
-                                <img class="w-100 h-100 d-block object-fit-cover" src="/images/alumniGolfCourse.png" alt="Image of alumni.">
-                            </div>
-                            <div class="card-body">
-                                <h3 class="h5 text-brand text-center">Past Alumni</h3>
-                            </div>
+                            <div class="card-body">        
+                                <h3 class="h5 text-brand mb-1 text-center">Past Pacific Programs</h3>                                                                
+                            </div>                             
                         </div>
                     </div>            
-                </div>            
+                </div>           
                 <?php 
                     // Insert HTML lower main section.
                     require app_public_path('lowerMainSection.php', APP_ENVIRONMENT);

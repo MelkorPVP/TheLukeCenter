@@ -86,6 +86,7 @@
             'values_count' => count($payload['values'] ?? []),
             'testimonials_count' => count($payload['testimonials'] ?? []),
             'images_count' => count($payload['images'] ?? []),
+            'alumni_images_count' => count($payload['alumniImages'] ?? []),
             ]);
         }
     }
@@ -398,6 +399,73 @@
         return array_values(array_unique($images, SORT_REGULAR));
     }
     
+    function site_content_fetch_alumni_images_from_google(array $config, ?AppLogger $logger = null): array
+    {
+        $googleConfig = $config['google'] ?? [];
+        $folderId = (string) ($config['google']['alumni_folder_id'] ?? '');
+        
+        if ($folderId === '') {
+            return [];
+        }
+        
+        $files = google_drive_list_images_in_folder($googleConfig, $folderId, 80, $logger);
+        
+        // Sort by file name so the order is deterministic for caching and rotations.
+        usort($files, static function (array $a, array $b): int {
+            return strcmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
+        });
+        
+        $images = [];
+        foreach ($files as $f) {
+            $id   = (string) ($f['id'] ?? '');
+            $name = (string) ($f['name'] ?? '');
+            
+            if ($id === '') continue;
+            
+            $images[] = [
+            'id' => $id,
+            'name' => $name,
+            'url' => google_drive_build_image_url($id, 1600),
+            ];
+        }
+        
+        // Remove duplicate IDs to prevent broken rotations when Drive contains aliases.
+        return array_values(array_unique($images, SORT_REGULAR));
+    }
+
+/**
+     * Fetch the first PDF from the configured folder.
+     *
+     * @param array<string, mixed> $config
+     * @return string
+     */
+    function site_content_fetch_program_flyer_pdf_from_google(array $config, ?AppLogger $logger = null): string
+    {
+        $googleConfig = $config['google'] ?? [];
+        // Ensure 'catalytic_pdf_folder_id' is defined in your app/config.php
+        $folderId = (string) ($config['google']['program_flyer_folder_id'] ?? '');
+
+        if ($folderId === '') {
+            return '';
+        }
+
+        // List files specifically looking for PDFs
+        $files = google_drive_list_files_in_folder($googleConfig, $folderId, 'application/pdf', 1, $logger);
+
+        if (empty($files)) {
+            return '';
+        }
+
+        $id = (string) ($files[0]['id'] ?? '');
+
+        if ($id === '') {
+            return '';
+        }
+
+        // Return standard viewer URL
+        return 'https://drive.google.com/file/d/' . $id . '/view';
+    }
+
     /**
         * Aggregate all Google-backed content into a single payload for caching.
         *
@@ -409,7 +477,9 @@
         // Gather all Google-backed resources together so cache writes remain atomic.
         $values = site_content_fetch_values_from_google($config, $logger);
         $testimonials = site_content_fetch_testimonials_from_google($config, $logger);
-        $images = site_content_fetch_gallery_images_from_google($config, $logger);
+        $programImages = site_content_fetch_gallery_images_from_google($config, $logger);
+        $alumniImages = site_content_fetch_alumni_images_from_google($config, $logger);
+        $programFlyerPdf = site_content_fetch_program_flyer_pdf_from_google($config, $logger);
         
         $developerUsername = (string) ($values['developer_mode_username'] ?? '');
         $developerPassword = (string) ($values['developer_mode_password'] ?? '');
@@ -428,7 +498,9 @@
         'generated_at' => time(),
         'values' => $values,
         'testimonials' => $testimonials,
-        'images' => $images,
+        'programImages' => $programImages,
+        'alumniImages' => $alumniImages,
+        'programFlyerPdf' => $programFlyerPdf,
         'developer_mode_username_hash' => hash('sha256', $developerUsername),
         'developer_mode_password_hash' => hash('sha256', $developerPassword),
         ];
@@ -440,10 +512,22 @@
         * @param array<string, mixed> $config
         * @return array<int, array<string, string>>
     */
-    function site_content_gallery_images(array $config, ?AppLogger $logger = null): array
+    function site_content_gallery_program_images(array $config, ?AppLogger $logger = null): array
     {
         $payload = site_content_resolve_payload($config, $logger);
-        $images = $payload['images'] ?? [];
+        $programImages = $payload['programImages'] ?? [];
         
-        return is_array($images) ? $images : [];
+        return is_array($programImages) ? $programImages : [];
     }
+    function site_content_alumni_images(array $config, ?AppLogger $logger = null): array
+    {
+        $payload = site_content_resolve_payload($config, $logger);
+        $programImages = $payload['alumniImages'] ?? [];
+        
+        return is_array($programImages) ? $programImages : [];
+    }
+    function site_content_program_flyer_pdf(array $config, ?AppLogger $logger = null): string
+        {
+            $payload = site_content_resolve_payload($config, $logger);
+            return (string) ($payload['programFlyerPdf'] ?? '');
+        }

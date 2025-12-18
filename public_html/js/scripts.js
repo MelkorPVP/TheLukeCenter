@@ -153,13 +153,15 @@ function initializeForm(formId, statusId)
 * ==========================================================================*/
 
 // Shared fetch helper so gallery + testimonials can reuse the same payload
-const galleryPayloadCache = new Map();
 
-const fetchGalleryPayload = (endpoint) =>
+
+const programGalleryPayloadCache = new Map();
+
+const fetchProgramGalleryPayload = (endpoint) =>
 {
-	const resolvedEndpoint = endpoint || '/galleryData.php';
+	const resolvedEndpoint = endpoint || '/handleProgramGalleryData.php';
 	
-	if (galleryPayloadCache.has(resolvedEndpoint)) return galleryPayloadCache.get(resolvedEndpoint);
+	if (programGalleryPayloadCache.has(resolvedEndpoint)) return programGalleryPayloadCache.get(resolvedEndpoint);
 	
 	const controller = new AbortController();
 	const timeoutId  = setTimeout(() => controller.abort(), 8000);
@@ -170,13 +172,60 @@ const fetchGalleryPayload = (endpoint) =>
 			if (!resp.ok) throw new Error('Gallery endpoint error');
 			return resp.json();
 		})
-		.catch(() => ({ images: [], testimonials: [] }))
+		.catch(() => ({ programImages: [] }))
 		.finally(() => clearTimeout(timeoutId));
 		
-		galleryPayloadCache.set(resolvedEndpoint, request);
+		programGalleryPayloadCache.set(resolvedEndpoint, request);
 		return request;
 };
 
+const alumniGalleryPayloadCache = new Map();
+
+const fetchAlumniGalleryPayload = (endpoint) =>
+{
+	const resolvedEndpoint = endpoint || '/handleAlumniGalleryData.php';
+	
+	if (alumniGalleryPayloadCache.has(resolvedEndpoint)) return alumniGalleryPayloadCache.get(resolvedEndpoint);
+	
+	const controller = new AbortController();
+	const timeoutId  = setTimeout(() => controller.abort(), 8000);
+	
+	const request = fetch(resolvedEndpoint, { credentials: 'same-origin', signal: controller.signal })
+	.then((resp) =>
+		{
+			if (!resp.ok) throw new Error('Gallery endpoint error');
+			return resp.json();
+		})
+		.catch(() => ({ alumniImages: [] }))
+		.finally(() => clearTimeout(timeoutId));
+		
+		alumniGalleryPayloadCache.set(resolvedEndpoint, request);
+		return request;
+};
+
+const testimonialPayloadCache = new Map();
+
+const fetchTestimonialPayload = (endpoint) =>
+{
+	const resolvedEndpoint = endpoint || '/handleTestimonialData.php';
+	
+	if (testimonialPayloadCache.has(resolvedEndpoint)) return testimonialPayloadCache.get(resolvedEndpoint);
+	
+	const controller = new AbortController();
+	const timeoutId  = setTimeout(() => controller.abort(), 8000);
+	
+	const request = fetch(resolvedEndpoint, { credentials: 'same-origin', signal: controller.signal })
+	.then((resp) =>
+		{
+			if (!resp.ok) throw new Error('Gallery endpoint error');
+			return resp.json();
+		})
+		.catch(() => ({ testimonials: [] }))
+		.finally(() => clearTimeout(timeoutId));
+		
+		testimonialPayloadCache.set(resolvedEndpoint, request);
+		return request;
+};
 
 function initializeGalleryRotator()
 {
@@ -184,7 +233,7 @@ function initializeGalleryRotator()
         const root = document.getElementById('galleryRoot');
         if (!root) return;
 	
-	const endpoint = root.getAttribute('data-gallery-endpoint') || '/galleryData.php';	
+	const endpoint = root.getAttribute('data-gallery-endpoint') || '/handleProgramGalleryData.php';	
 	const imgEl    = document.getElementById('galleryImage');	
 	const prevBtn  = document.getElementById('galleryPrev');	
 	const nextBtn  = document.getElementById('galleryNext');	
@@ -304,11 +353,11 @@ function initializeGalleryRotator()
 	imgEl.alt = 'Loading gallery…';	
 	
 	// Load data	
-	fetchGalleryPayload(endpoint)	
+	fetchProgramGalleryPayload(endpoint)	
 	.then((data) =>			
 		{				
 			// Filter out empty or malformed items to avoid broken thumbnails.				
-			images = (Array.isArray(data.images) ? data.images : []).filter((item) => item && item.url);				
+			images = (Array.isArray(data.programImages) ? data.programImages : []).filter((item) => item && item.url);				
 			
                         if (images.length)
                         {
@@ -355,6 +404,358 @@ function initializeGalleryRotator()
 					});						
 }
 
+function initializeAlumniGalleryRotator()
+
+{
+
+        logger.debug('initializeAlumniRotator: start');
+
+        const root = document.getElementById('alumniRoot');
+
+        if (!root) return;
+
+	
+
+	const endpoint = root.getAttribute('data-alumni-endpoint') || '/handleAlumniGalleryData.php';	
+
+	const imgEl    = document.getElementById('alumniImage');	
+
+	const prevBtn  = document.getElementById('alumniPrev');	
+
+	const nextBtn  = document.getElementById('alumniNext');	
+
+	
+
+	if (!imgEl || !prevBtn || !nextBtn) return;	
+
+	
+
+	const imageIntervalMs = 5500;	// 5.5 seconds
+
+	const idleResumeMs    = 54500; // resume time is 54.5 seconds + imageInterval of 5.5 Seconds
+
+	
+
+	// Reusable 1px transparent gif so we never render the broken-image icon.	
+
+	const fallbackImage = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';	
+
+	
+
+	// NEW: session storage key (allow override if you ever need it)
+
+	const storageKey =
+
+	root.getAttribute('alumni-storage-key') ||
+
+	'lc_gallery_index';
+
+	
+
+	const readStoredIndex = () =>
+
+	{
+
+		try {
+
+			const raw = sessionStorage.getItem(storageKey);
+
+			const idx = Number.parseInt(raw ?? '', 10);
+
+			return Number.isFinite(idx) ? idx : 0;
+
+			} catch (_) {
+
+			return 0;
+
+		}
+
+	};
+
+	
+
+	const persistIndex = (idx) =>
+
+	{
+
+		try {
+
+			sessionStorage.setItem(storageKey, String(idx));
+
+		} catch (_) {}
+
+	};
+
+	
+
+	
+
+	let images = [];	
+
+	
+
+	// Track images that failed to load so we can skip them on rotation and avoid an infinite loop.	
+
+	const failedImageIds = new Set();	
+
+	
+
+	let imageIndex = 0;	
+
+	
+
+	let imageTimer  = null;	
+
+	let resumeTimer = null;	
+
+	
+
+	const setImage = (index) =>	
+
+	{		
+
+		if (!images.length) return;		
+
+		
+
+		// Skip any URLs that failed previously.		
+
+		let nextIndex = (index + images.length) % images.length;		
+
+		let guard = 0;		
+
+		while (guard < images.length && failedImageIds.has(images[nextIndex].id || images[nextIndex].url)) 
+
+		{			
+
+			nextIndex = (nextIndex + 1) % images.length;			
+
+			guard += 1;			
+
+		}		
+
+		
+
+		imageIndex = nextIndex;
+
+		
+
+		persistIndex(imageIndex); // NEW: save on every successful set
+
+		
+
+                const item = images[imageIndex];
+
+
+
+                imgEl.dataset.imageId = item.id || item.url;
+
+                imgEl.src = item.url;
+
+                imgEl.alt = item.name || 'Alumni image';
+
+                logger.debug('initializeAlumniRotator: set image', { index: imageIndex, id: imgEl.dataset.imageId });
+
+        };
+
+	
+
+	const nextImage = () => setImage(imageIndex + 1);	
+
+	const prevImage = () => setImage(imageIndex - 1);	
+
+	
+
+        const startImageAuto = () =>
+
+        {
+
+                if (imageTimer || images.length <= 1) return;
+
+                imageTimer = setInterval(nextImage, imageIntervalMs);
+
+                logger.debug('initializeAlumniRotator: auto-rotation started');
+
+        };
+
+	
+
+        const stopImageAuto = () =>
+
+        {
+
+                if (imageTimer)
+
+                {
+
+                        clearInterval(imageTimer);
+
+                        imageTimer = null;
+
+                        logger.debug('initializeAlumniRotator: auto-rotation stopped');
+
+                }
+
+        };
+
+	
+
+        const scheduleResume = () =>
+
+        {
+
+                if (resumeTimer) clearTimeout(resumeTimer);
+
+                resumeTimer = setTimeout(() =>
+
+                        {
+
+                                startImageAuto();
+
+                        }, idleResumeMs);
+
+                logger.debug('initializeAlumniRotator: auto-rotation scheduled to resume');
+
+        };
+
+	
+
+        const manualAdvance = (fn) =>
+
+        {
+
+                stopImageAuto();
+
+                fn();
+
+                scheduleResume();
+
+                logger.debug('initializeAlumniRotator: manual advance invoked');
+
+        };
+
+	
+
+	// Wire controls	
+
+        prevBtn.addEventListener('click', () => manualAdvance(prevImage));
+
+        nextBtn.addEventListener('click', () => manualAdvance(nextImage));
+
+        logger.debug('initializeAlumniRotator: navigation listeners attached');
+
+	
+
+	// Show a lightweight loading placeholder so the user sees immediate feedback.	
+
+	imgEl.src = fallbackImage;	
+
+	imgEl.alt = 'Loading alumni pictures…';	
+
+	
+
+	// Load data	
+
+	fetchAlumniGalleryPayload(endpoint)	
+
+	.then((data) =>			
+
+		{				
+
+			// Filter out empty or malformed items to avoid broken thumbnails.				
+
+			images = (Array.isArray(data.alumniImages) ? data.alumniImages : []).filter((item) => item && item.url);				
+
+			
+
+                        if (images.length)
+
+                        {
+
+                                // NEW: initialize from stored index
+
+                                setImage(readStoredIndex());
+
+                                startImageAuto();
+
+                                logger.debug('initializeAlumniRotator: images loaded', images.length);
+
+                        }
+
+			else 
+
+			{					
+
+				imgEl.alt = 'No alumni images available';					
+
+			}				
+
+		})			
+
+                .catch(() =>
+
+                        {
+
+                                imgEl.alt = 'Failed to load alumni';
+
+                                imgEl.src = fallbackImage;
+
+                                logger.debug('initializeAlumniRotator: failed to load alumni payload');
+
+                        });
+
+			
+
+			// Skip broken images automatically instead of showing missing icons.				
+
+			imgEl.addEventListener('error', () =>					
+
+				{						
+
+					const failedId = imgEl.dataset.imageId || imgEl.src;						
+
+					if (failedId) failedImageIds.add(failedId);						
+
+					
+
+                                        if (failedImageIds.size >= images.length)
+
+                                        {
+
+                                                imgEl.src = fallbackImage;
+
+                                                imgEl.alt = 'Unable to load alumni images';
+
+                                                stopImageAuto();
+
+                                                return;
+
+                                        }
+
+
+
+                                        manualAdvance(nextImage);
+
+                                        logger.debug('initializeAlumniRotator: image failed, advancing', imgEl.dataset.imageId);
+
+                                });
+
+				
+
+				// Clean up on page hide					
+
+				window.addEventListener('pagehide', () =>						
+
+					{							
+
+						stopImageAuto();							
+
+						if (resumeTimer) clearTimeout(resumeTimer);							
+
+					});						
+
+}
+
 function initializeTestimonialRotator()
 {
         logger.debug('initializeTestimonialRotator: start');
@@ -363,11 +764,7 @@ function initializeTestimonialRotator()
 	
 	const galleryRoot = document.getElementById('galleryRoot');
 	
-	const endpoint =
-	quoteEl.getAttribute('data-testimonial-endpoint') ||
-	quoteEl.getAttribute('data-gallery-endpoint') ||
-	(galleryRoot ? galleryRoot.getAttribute('data-gallery-endpoint') : '') ||
-	'/galleryData.php';
+	const endpoint = quoteEl.getAttribute('data-testimonial-endpoint') || '/handleTestimonialData.php';
 	
 	const quoteIntervalMs = 9000;
 	
@@ -429,7 +826,7 @@ function initializeTestimonialRotator()
 	
 	quoteEl.textContent = 'Loading testimonials…';
 	
-	fetchGalleryPayload(endpoint)
+	fetchTestimonialPayload(endpoint)
 	.then((data) =>
 		{
 			testimonials = Array.isArray(data.testimonials) ? data.testimonials : [];
@@ -631,6 +1028,7 @@ function initializeDeveloperTestData()
 initializeNav();
 initializeForm('contactForm', 'contactStatus');
 initializeForm('applyForm', 'applyStatus');
+initializeAlumniGalleryRotator()
 initializeGalleryRotator();
 initializeTestimonialRotator();
 initializeDeveloperLogin();

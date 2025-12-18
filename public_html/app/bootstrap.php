@@ -17,7 +17,7 @@ require_once __DIR__ . '/services/FormService.php';
 require_once __DIR__ . '/services/DeveloperService.php';
 
 if (!defined('APP_ROOT')) {
-    define('APP_ROOT', dirname(__DIR__));
+    define('APP_ROOT', dirname(__DIR__ , 2));
 }
 
 // Ensure all entry points share a consistent session state for logging and forms.

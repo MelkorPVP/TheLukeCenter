@@ -228,3 +228,49 @@ footer a:hover
 /*---------------
     END GALLERY RULES
 ---------------*/
+
+/*---------------
+    BEGIN CATALYTIC LEADERSHIP OVERVIEW (EXPANDABLE) RULES
+---------------*/
+
+.lc-expand-toggle
+{
+    text-align: left;
+    padding: .9rem 1rem;
+}
+
+.lc-expand-toggle .lc-toggle-subtitle
+{
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.lc-expand-toggle .lc-collapse-chevron
+{
+    transition: transform .18s ease-in-out;
+}
+
+.lc-expand-toggle:not(.collapsed) .lc-collapse-chevron
+{
+    transform: rotate(180deg);
+}
+
+.btn-outline-brand:hover .lc-toggle-subtitle
+{
+    color: rgba(255,255,255,0.9);
+}
+
+.lc-toc a
+{
+    display: block;
+    padding: .15rem 0;
+}
+
+.lc-overview-content p:last-child
+{
+    margin-bottom: 0;
+}
+
+/*---------------
+    END CATALYTIC LEADERSHIP OVERVIEW (EXPANDABLE) RULES
+---------------*/

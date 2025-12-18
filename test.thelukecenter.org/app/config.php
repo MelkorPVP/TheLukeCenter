@@ -8,7 +8,7 @@ const APP_ENV_TEST = 'test';
 function app_public_root(?string $environment = null): string
 {
     $environment = $environment ?? app_detect_environment();
-    $root = dirname(__DIR__);
+    $root = dirname(__DIR__ , 2);
 
     if ($environment === APP_ENV_TEST) {
         return $root . '/test.thelukecenter.org';
@@ -202,7 +202,9 @@ function app_base_configuration(): array
         'application_spreadsheet_id' => app_read_env('GOOGLE_APPLICATION_SHEET_ID_PROD', app_read_env('GOOGLE_APPLICATION_SHEET_ID')),
         'application_sheet_tab' => app_read_env('GOOGLE_APPLICATION_SHEET_TAB', 'Submissions'),
         // NEW: rotating gallery Drive folder (PROD)
-        'gallery_folder_id' => app_read_env('GOOGLE_GALLERY_FOLDER_ID_PROD', app_read_env('GOOGLE_GALLERY_FOLDER_ID')),
+        'program_flyer_folder_id' => app_read_env('GOOGLE_PROGRAM_FLYER_FOLDER_ID_PROD'),
+        'gallery_folder_id' => app_read_env('GOOGLE_PACIFIC_GALLERY_FOLDER_ID_PROD'),
+        'alumni_folder_id' => app_read_env('GOOGLE_ALUMNI_FOLDER_ID_PROD'),
         'testimonials_spreadsheet_id' => app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID_PROD', app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID')),
         'testimonials_range' => $testimonialsRange,
         'developer_sheet_id' => $siteValuesSheetIdProd,
@@ -216,7 +218,9 @@ function app_base_configuration(): array
         'contact_sheet_tab' => app_read_env('GOOGLE_CONTACT_SHEET_TAB_TEST', 'Submissions'),
         'application_spreadsheet_id' => app_read_env('GOOGLE_APPLICATION_SHEET_ID_TEST', app_read_env('GOOGLE_APPLICATION_SHEET_ID')),
         'application_sheet_tab' => app_read_env('GOOGLE_APPLICATION_SHEET_TAB_TEST', 'Submissions'),
-        'gallery_folder_id' => app_read_env('GOOGLE_GALLERY_FOLDER_ID_TEST', app_read_env('GOOGLE_GALLERY_FOLDER_ID')),
+        'program_flyer_folder_id' => app_read_env('GOOGLE_PROGRAM_FLYER_FOLDER_ID_TEST'),
+        'gallery_folder_id' => app_read_env('GOOGLE_PACIFIC_GALLERY_FOLDER_ID_TEST'),
+        'alumni_folder_id' => app_read_env('GOOGLE_ALUMNI_FOLDER_ID_PROD'),
         'testimonials_spreadsheet_id' => app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID_TEST', app_read_env('GOOGLE_TESTIMONIALS_SHEET_ID')),
         'testimonials_range' => $testimonialsRange,
         'developer_sheet_id' => $siteValuesSheetIdTest,
@@ -249,7 +253,7 @@ function app_base_configuration(): array
         ],
         'logging' => [
             'enabled' => app_is_logging_enabled(),
-            'file' => dirname(__DIR__) . '/storage/logs/application.log',
+            'file' => dirname(__DIR__ , 2) . '/storage/logs/application.log',
         ],
     ];
 }

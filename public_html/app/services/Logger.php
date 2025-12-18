@@ -171,7 +171,7 @@ function app_logger_file_writer(string $filePath): callable
  */
 function app_logger_from_config(array $loggingConfig, string $environment, ?callable $writer = null, ?callable $formatter = null): AppLogger
 {
-    $defaultRoot = defined('APP_ROOT') ? APP_ROOT : dirname(__DIR__, 1);
+    $defaultRoot = defined('APP_ROOT') ? APP_ROOT : dirname(__DIR__, 3);
     $filePath = $loggingConfig['file'] ?? ($defaultRoot . '/storage/logs/application.log');
 
     return new AppLogger(

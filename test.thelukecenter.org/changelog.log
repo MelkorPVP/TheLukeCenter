@@ -13,32 +13,48 @@
 ##  11/20/2025  C.Pfannkuch     Fixed errors in the way shared PHP variables were being used across the site. I moved them to sharedVariables.php for further ease of maintenance.
 ##  11/21/2025  C.Pfannkuch     Finished implementing OAuth2 authroization workflows. Got basic form functionality working. It submits, appends row, sends email. Need to fine tune process.
 ##  11/21/2025  C.Pfannkuch     Completed a refactor, added logging, moved truly shared application componets to the server root, now lives in 'SERVERROOT/app/...' this creates true
-									isolation for TEST and PROD. Also started to give the application awareness of its own environment to help automate testing and to allow the introduction
-									of distinct data sources (sheets) that are dynamically based on the environment.
-	11/23/2025	Z.Kepler		Changed classes of the cards on board.php to resize and better fit the webpage. 
-	11/23/2025	Z.Kepler		Removed catalytic leadership button on pacificProgram.php for more visual clarity. 
-	11/23/2025	Z.Kepler		Changed font size on navbar.php to be slightly larger. 
-	11/23/2025	Z.Kepler		Changed banner size to be slightly smaller on all pages. 
-	11/23/2025	Z.Kepler		Added favicons and manifest for browser icon formatting. 
-	11/23/2025	Z.Kepler		Updated variable names on handleApply.php.
-	11/23/2025	Z.Kepler		Updated variable names on handleContact.php and contact.php
-	12/08/2025	Z.Kepler		Added rotating gallery to the test site page pacificProgram.php to replace stock image. 
-	12/08/2025	Z.Kepler		Added testimonials to lowerMain.php from gallery.php
-	12/09/2025	Z.Kepler		Changed button class created by initializeDeveloperTestData() in scripts.js to better allign with website.
-	12/09/2025	Z.Kepler		Fixed formatting of the testimonials on lowerMain.php to better allign with the page. 
-	12/09/2025	Z.Kepler		Fixed scripts.js to fully fill in apply and contact forms when using developer button. 
-	12/10/2025	Z.Kepler		Changed Admin button from navbar to be a smaller icon on footer.php. 
-	12/10/2025	Z.Kepler		Split functions of intitializeGallery in scripts to implement testimonials and gallery seperately. 
-	12/10/2025	Z.Kepler		Added section headings to apply.php in order to break up the form. 
-	12/10/2025	Z.Kepler		Reduced Gallery Scroll time by 20% in the intitializeGalleryRotator. 
-	12/10/2025	Z.Kepler		Added session storage variables to rotator functions in scripts.js to keep image/comment static while refreshing or going page to page. 
+##									isolation for TEST and PROD. Also started to give the application awareness of its own environment to help automate testing and to allow the introduction
+##									of distinct data sources (sheets) that are dynamically based on the environment.
+##	11/23/2025	Z.Kepler		Changed classes of the cards on board.php to resize and better fit the webpage. 
+##	11/23/2025	Z.Kepler		Removed catalytic leadership button on pacificProgram.php for more visual clarity. 
+##	11/23/2025	Z.Kepler		Changed font size on navbar.php to be slightly larger. 
+##	11/23/2025	Z.Kepler		Changed banner size to be slightly smaller on all pages. 
+##	11/23/2025	Z.Kepler		Added favicons and manifest for browser icon formatting. 
+##	11/23/2025	Z.Kepler		Updated variable names on handleApply.php.
+##	11/23/2025	Z.Kepler		Updated variable names on handleContact.php and contact.php
+##	12/08/2025	Z.Kepler		Added rotating gallery to the test site page pacificProgram.php to replace stock image. 
+##	12/08/2025	Z.Kepler		Added testimonials to lowerMain.php from gallery.php
+##	12/09/2025	Z.Kepler		Changed button class created by initializeDeveloperTestData() in scripts.js to better allign with website.
+##	12/09/2025	Z.Kepler		Fixed formatting of the testimonials on lowerMain.php to better allign with the page. 
+##	12/09/2025	Z.Kepler		Fixed scripts.js to fully fill in apply and contact forms when using developer button. 
+##	12/10/2025	Z.Kepler		Changed Admin button from navbar to be a smaller icon on footer.php. 
+##	12/10/2025	Z.Kepler		Split functions of intitializeGallery in scripts to implement testimonials and gallery seperately. 
+##	12/10/2025	Z.Kepler		Added section headings to apply.php in order to break up the form. 
+##	12/10/2025	Z.Kepler		Reduced Gallery Scroll time by 20% in the intitializeGalleryRotator. 
+##	12/10/2025	Z.Kepler		Added session storage variables to rotator functions in scripts.js to keep image/comment static while refreshing or going page to page. 
+##  12/10/2025  C.Pfannkuch     Updated 'developer_copy_overlay()' to snapshot destination roots under Backups/<env>-<timestamp>, wipe and recreate the target, and log backup, cleanup, 
+##									and copy outcomes while returning the backup path. 
+##								Updated .htaccess flag loading to trim inline comments from SetEnv directives before caching values.
+##									Reworked 'app_write_htaccess_flags()' to modify existing SetEnv lines in place, append new flags without reordering other content, 
+##									and preserve whitespace while normalizing values. 
+##								Added client side logging via console logger gated by developer/logging flags from APP_CONTEXT 
+##									attributes to keep debug output disabled by default.
+##	12/11/2025	Z.Kepler		Changed the formatting of lowermain.php to remove card boarders in favor of just text on screen, made the same changed to board.php and pacificProgram.php
+##  12/15/2025	Z.Kepler		Brought the app folders into test and prod for better isolation of the two environments.
+##	12/16/2025	Z.Kepler		Added rotating gallery to alumni.php, added functions to scripts.js and contentService.php to implement it. 
+##								Fixed page formatting for alumni.php to look more clean. 
+##								Something went wrong with the gallery on pacificProgram, reverted to a previous version to fix it but the issue is persisting.
+##								Issue with gallery resolved by fixing names used in config as well as the array names in the cron job. 
+##								Re-added the gallery on alumni.php and finished dismantling the handler into three seperate files. 
+##	12/18/2025	Z.Kepler		Fixed a broken link on lowerMain that was linking to an old version of pacificProgram. 
 ## ------------------------------------------------------------------------------------------------
 
-Tweak promote to prod or prod to test to better clone test files. 
+TODO: Configure application to load program flyer and any other PDF from drive location so its a simple swap out for them.
 
-Configure application to load program flyer and any other PDF from drive location so its a simple swap out for them.
+TODO: Code and project clean up. 
+
+TODO: Fix CRON job currently runs out of test but builds the cache for test and prod. 
+
+TODO: Add True TEST and PROD Environment variables for Logging and Developer Mode. These should be specific to TEST and PROD.
 
 
-Fix htaaccess weirdness. 
-
-Create Gallery for Alumni Page. 

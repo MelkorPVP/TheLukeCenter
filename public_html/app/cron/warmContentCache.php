@@ -85,7 +85,8 @@ foreach ($environments as $environment) {
 
         $valuesCount = is_array($payload['values'] ?? null) ? count($payload['values']) : 0;
         $testimonialsCount = is_array($payload['testimonials'] ?? null) ? count($payload['testimonials']) : 0;
-        $imagesCount = is_array($payload['images'] ?? null) ? count($payload['images']) : 0;
+        $imagesCount = is_array($payload['programImages'] ?? null) ? count($payload['programImages']) : 0;
+        $alumniImagesCount = is_array($payload['alumniImages'] ?? null) ? count($payload['alumniImages']) : 0;
 
         $generatedAtRaw = $payload['generated_at'] ?? null;
         $generatedAt = is_numeric($generatedAtRaw)
@@ -97,6 +98,7 @@ foreach ($environments as $environment) {
             'values_count' => $valuesCount,
             'testimonials_count' => $testimonialsCount,
             'images_count' => $imagesCount,
+            'alumni_images_count' => $alumniImagesCount,
             'generated_at' => $generatedAt,
         ]);
     } catch (Throwable $e) {

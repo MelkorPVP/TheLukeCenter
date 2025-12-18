@@ -231,7 +231,7 @@ function developer_copy_overlay(string $sourceEnv, string $destinationEnv, ?AppL
     }
 
     $timestamp = (new DateTimeImmutable())->format('YmdHis');
-    $backupRoot = (defined('APP_ROOT') ? APP_ROOT : dirname(__DIR__, 2)) . '/backups';
+    $backupRoot = (defined('APP_ROOT') ? APP_ROOT : dirname(__DIR__, 3)) . '/backups';
     $backupDir = $backupRoot . DIRECTORY_SEPARATOR . $destinationEnv . '-' . $timestamp;
 
     if (!is_dir($backupRoot)) {
